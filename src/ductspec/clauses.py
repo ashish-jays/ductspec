@@ -29,7 +29,18 @@ CLAUSE_NUM = re.compile(r"^(\d+\.\d+(?:\.\d+)*)\s*$")
 CLAUSE_INLINE = re.compile(r"^(\d+\.\d+(?:\.\d+)*)\s{2,}(\S.*)$")
 PART = re.compile(r"^PART\s+(\d)\s+(\w.*)$")
 BLANK = re.compile(r"\[_+\]")
-ALTERNATIVES = re.compile(r"\[[^\[\]]{2,60}\]\s*\[[^\[\]]{2,60}\]")
+# Two bracketed options offered side by side. The cap was 60 characters and
+# let through UFGS 23 30 00 clause 3.2.7.1, whose alternatives are
+# "[minimum 1.3 mm 18 gauge , Type 304L or 316L, stainless steel]" and
+# "[minimum 1.6 mm 16 gauge carbon steel]" — a real unresolved material choice
+# on grease-laden exhaust duct. A spec writer's option is not a requirement.
+ALTERNATIVES = re.compile(r"\[[^\[\]]{2,200}\]\s*\[[^\[\]]{2,200}\]")
+# A single bracketed option, e.g. "galvanized steel [or aluminum]". Whether it
+# matters depends on where it sits: a bracket around the material destroys the
+# requirement, a bracket in "Install ductwork[ as indicated]" does not. Too
+# context-dependent for a regex, so it is recorded as a flag and the extraction
+# step decides per clause, with the quoted span in hand.
+OPTIONAL_TEXT = re.compile(r"\[[^\[\]]{2,200}\]")
 
 
 @dataclass
@@ -42,6 +53,7 @@ class Clause:
     page_start: int
     operative: bool
     non_operative_reasons: list[str]
+    has_optional_text: bool
 
 
 def strip_designer_notes(text: str) -> str:
@@ -112,6 +124,7 @@ def parse_clauses(pdf_path: Path, source_id: str) -> list[Clause]:
                 page_start=body_page(cid),
                 operative=not reasons,
                 non_operative_reasons=reasons,
+                has_optional_text=bool(OPTIONAL_TEXT.search(text)),
             )
         )
 
