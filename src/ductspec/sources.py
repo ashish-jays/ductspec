@@ -45,6 +45,7 @@ def fetch_all(force: bool = False) -> dict[str, dict]:
             "title": src["title"],
             "url": src["url"],
             "split": src["split"],
+            "convention": src.get("convention", "ufgs"),
             "bytes": len(data),
             "sha256": hashlib.sha256(data).hexdigest(),
         }
@@ -55,4 +56,5 @@ def fetch_all(force: bool = False) -> dict[str, dict]:
 
 if __name__ == "__main__":
     for sid, meta in fetch_all().items():
-        print(f"{sid:24} {meta['split']:8} {meta['bytes']:>8}B  {meta['sha256'][:16]}  {meta['title']}")
+        print(f"{sid:22} {meta['split']:8} {meta['convention']:5} {meta['bytes']:>8}B  "
+              f"{meta['sha256'][:12]}  {meta['title']}")

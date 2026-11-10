@@ -177,3 +177,37 @@ def test_side_by_side_alternatives_are_not_citable():
     # Its neighbour states one material outright, so it stays citable.
     exposed = next(c for c in clauses if c.clause_id == "3.2.7.2")
     assert exposed.operative and not exposed.has_optional_text
+
+
+# --- the cross-authority holdout -------------------------------------------
+
+from ductspec.conventions import VA  # noqa: E402
+
+
+@pytest.mark.skipif(not (SOURCES / "VA-23-31-00.pdf").exists(), reason="run ductspec.sources first")
+def test_va_corpus_parses_with_its_own_conventions():
+    clauses = parse_clauses(SOURCES / "VA-23-31-00.pdf", "VA-23-31-00", VA)
+    by_id = {c.clause_id: c for c in clauses}
+
+    # VA numbers clauses 2.1 with lettered subparagraphs, so a citation can
+    # name 2.1.A rather than the whole article.
+    assert "2.1.A" in by_id
+    assert "galvanized sheet steel" in by_id["2.1.A"].text
+
+    # Spec writer notes are indented rather than rule-delimited, and must not
+    # survive into any clause body.
+    assert not any("SPEC WRITER" in c.text.upper() for c in clauses)
+
+
+@pytest.mark.skipif(not (SOURCES / "VA-23-31-00.pdf").exists(), reason="run ductspec.sources first")
+def test_unmade_choices_are_uncitable_in_either_notation():
+    """UFGS writes an unmade choice as "[A] [B]", VA as "//A// //B//".
+
+    This is the point of the holdout: the model has to learn that a choice
+    nobody has made is not a requirement, not that square brackets are bad.
+    """
+    va = parse_clauses(SOURCES / "VA-23-31-00.pdf", "VA-23-31-00", VA)
+    unresolved = [c for c in va if "UNRESOLVED_ALTERNATIVES" in c.non_operative_reasons]
+    assert unresolved, "VA 23 31 00 offers the engineer several unmade choices"
+    # e.g. duct pressure class is offered as 2, 3 or 4 inch WG until selected.
+    assert any("//" in c.text for c in unresolved)

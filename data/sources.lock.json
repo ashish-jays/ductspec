@@ -1,6 +1,7 @@
 {
   "UFGS-22-00-00": {
     "bytes": 482592,
+    "convention": "ufgs",
     "sha256": "e56da52bfa6a932d3a9bfe0ab35d49bde7fa3de921311ecb24a550b2d39dfcf2",
     "split": "train",
     "title": "Plumbing, General Purpose",
@@ -8,6 +9,7 @@
   },
   "UFGS-23-05-93": {
     "bytes": 165362,
+    "convention": "ufgs",
     "sha256": "11c7cb8d9e2bcb1d32b915bac4abc6e65e9856f337b45ce271f8b6f129c2e3d1",
     "split": "train",
     "title": "Testing, Adjusting, and Balancing for HVAC",
@@ -15,6 +17,7 @@
   },
   "UFGS-23-07-00": {
     "bytes": 248168,
+    "convention": "ufgs",
     "sha256": "77cce995c5b7368f2577ed5e6cafb30e876d75bf2a0574bacf2d09a5237007b1",
     "split": "train",
     "title": "Thermal Insulation for Mechanical Systems",
@@ -22,6 +25,7 @@
   },
   "UFGS-23-08-00": {
     "bytes": 69338,
+    "convention": "ufgs",
     "sha256": "372430094954cd17a3e2f5ce16f644055aa3026db7f18a63c9ddcc075ca73ce4",
     "split": "train",
     "title": "Commissioning of HVAC Systems",
@@ -29,6 +33,7 @@
   },
   "UFGS-23-30-00": {
     "bytes": 299088,
+    "convention": "ufgs",
     "sha256": "ea384cba273ef02da7ebcf6bc87f7d008870d4780678a88095110202fab88fb9",
     "split": "train",
     "title": "HVAC Air Distribution",
@@ -36,9 +41,26 @@
   },
   "UFGS-23-31-13.00-40": {
     "bytes": 158891,
+    "convention": "ufgs",
     "sha256": "5ac140f252ed5cd011f53c7c9b32b9efa292d94753c5489c7300ffe8ce9d3989",
-    "split": "holdout",
+    "split": "train",
     "title": "Metal Ducts (NASA)",
     "url": "https://www.wbdg.org/FFC/NASA/UFGS/UFGS%2023%2031%2013.00%2040.pdf"
+  },
+  "VA-23-07-11": {
+    "bytes": 104953,
+    "convention": "va",
+    "sha256": "a2e21bdb4469d44b5df7c24be9e1dda9495d2ef7bdda23b3a1680fabd0d555df",
+    "split": "holdout",
+    "title": "HVAC Insulation (VA PG-18-1)",
+    "url": "https://www.wbdg.org/FFC/VA/VANCAS/VANCA230711.pdf"
+  },
+  "VA-23-31-00": {
+    "bytes": 89217,
+    "convention": "va",
+    "sha256": "d48dc461470d7eb8e154f9c3524b72eb46e93c29350e0f4fb731aef559b5b027",
+    "split": "holdout",
+    "title": "HVAC Ducts and Casings (VA PG-18-1)",
+    "url": "https://www.wbdg.org/FFC/VA/VANCAS/VANCA233100.pdf"
   }
 }

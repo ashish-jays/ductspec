@@ -6,9 +6,15 @@
 # surrogate, so the dataset can be published in full.
 #
 # split: train | holdout
-#   holdout is a WHOLE-DOCUMENT holdout — no clause from it is ever seen in
-#   training, so the test set measures transfer to an unseen specification
-#   rather than memorisation of seen prose.
+#   The holdout is a whole CORPUS from a different issuing authority. VA
+#   PG-18-1 states requirements in different words and marks the engineer's
+#   unmade choices differently: UFGS writes "[A] [B]", VA writes "//A// //B//"
+#   and says so itself ("Delete between //   // if not applicable to project").
+#   A model that learned "do not cite square brackets" fails this holdout; one
+#   that learned "do not cite a choice nobody has made" transfers. Holding out
+#   one more UFGS section would not have told us which we had trained.
+#
+# convention: which editing marks the issuing authority uses (see conventions.py)
 
 sources:
   - id: UFGS-23-30-00
@@ -34,4 +40,16 @@ sources:
   - id: UFGS-23-31-13.00-40
     title: Metal Ducts (NASA)
     url: https://www.wbdg.org/FFC/NASA/UFGS/UFGS%2023%2031%2013.00%2040.pdf
+    split: train
+
+  # Held out: a different authority, different wording, different editing marks.
+  - id: VA-23-31-00
+    title: HVAC Ducts and Casings (VA PG-18-1)
+    url: https://www.wbdg.org/FFC/VA/VANCAS/VANCA233100.pdf
     split: holdout
+    convention: va
+  - id: VA-23-07-11
+    title: HVAC Insulation (VA PG-18-1)
+    url: https://www.wbdg.org/FFC/VA/VANCAS/VANCA230711.pdf
+    split: holdout
+    convention: va
