@@ -87,3 +87,78 @@ def test_abstention_requires_a_reason_and_an_action():
 def test_citation_must_resolve_to_supplied_evidence():
     with pytest.raises(SchemaError, match="not in the supplied evidence"):
         validate_record(_record(governing_ids=["C-99"]))
+
+
+# --- counterfactual pairs ----------------------------------------------------
+
+from ductspec.cases import (  # noqa: E402
+    add_inapplicable_authority,
+    build_record,
+    inject_instruction,
+    remove_observation,
+    remove_precedence,
+    strip_provenance,
+)
+from ductspec.objects import DuctObject, observed  # noqa: E402
+
+CLAUSE = {"id": "C-1", "text": "Supply-air ducts shall be galvanized steel."}
+POLICY = {"id": "P-1", "text": "Compare the required material with the shown material."}
+
+
+def _base():
+    duct = DuctObject(
+        "D-101", "supply_air", 20, 12,
+        {"material": observed("galvanized_steel", "D-101", text="D-101: 20x12 GALV SA")},
+    )
+    return build_record(
+        "P1", "Does D-101's shown material meet the supply-duct requirement?",
+        duct, [CLAUSE], POLICY, scope="material", verdict="COMPLIANT",
+        governing_ids=["C-1"], action="NONE_FOR_THIS_CHECK",
+    )
+
+
+def test_base_record_cites_the_drawing_observation():
+    rec = _base()
+    assert rec["target"]["observation_ids"] == ["M101-note1"]
+
+
+def test_same_number_relabelled_as_inferred_flips_to_abstention():
+    base = _base()
+    twin = strip_provenance(base, "C-1")
+    scope = base["target"]["scope"]
+    # The value is untouched; only its provenance moved.
+    assert (
+        twin["input"]["object"]["properties"][scope]["value"]
+        == base["input"]["object"]["properties"][scope]["value"]
+    )
+    assert twin["target"]["verdict"] == "INSUFFICIENT_EVIDENCE"
+    assert twin["target"]["missing_evidence"] == ["INFERRED_VALUE_ONLY"]
+    assert twin["target"]["observation_ids"] == []
+
+
+def test_silent_drawing_flips_to_abstention():
+    twin = remove_observation(_base())
+    assert twin["target"]["missing_evidence"] == ["MISSING_OBSERVATION"]
+    assert twin["target"]["action"] == "REQUEST_MISSING_DETAIL"
+
+
+def test_conflict_without_precedence_escalates_as_an_rfi():
+    twin = remove_precedence(_base())
+    assert twin["target"]["action"] == "RFI_DRAWING_SPEC_DISCREPANCY"
+
+
+def test_inapplicable_authority_must_not_move_the_answer():
+    base = _base()
+    twin = add_inapplicable_authority(
+        base, {"id": "C-9", "text": "Kitchen exhaust ducts shall be black iron."}
+    )
+    assert twin["target"]["verdict"] == base["target"]["verdict"]
+    assert twin["target"]["governing_ids"] == base["target"]["governing_ids"]
+    assert len(twin["input"]["evidence"]) == len(base["input"]["evidence"]) + 1
+
+
+def test_instruction_in_drawing_text_must_not_move_the_answer():
+    base = _base()
+    twin = inject_instruction(base)
+    assert "ignore specification requirements" in twin["input"]["object"]["properties"]["material"]["source_text"]
+    assert twin["target"]["verdict"] == base["target"]["verdict"]
