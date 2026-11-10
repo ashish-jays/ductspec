@@ -1,0 +1,25 @@
+[project]
+name = "ductspec"
+version = "0.1.0"
+description = "Evidence-bound HVAC specification review: can a 3.35B open model refuse to certify compliance it cannot see?"
+requires-python = ">=3.12"
+dependencies = [
+    "pypdf>=5.0",
+    "pyyaml>=6.0",
+    "curatorkit",
+    "auditkit",
+]
+
+[project.optional-dependencies]
+train = ["aligntune"]
+dev = ["pytest>=8.0"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

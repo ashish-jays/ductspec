@@ -1,0 +1,44 @@
+{
+  "UFGS-22-00-00": {
+    "bytes": 482592,
+    "sha256": "e56da52bfa6a932d3a9bfe0ab35d49bde7fa3de921311ecb24a550b2d39dfcf2",
+    "split": "train",
+    "title": "Plumbing, General Purpose",
+    "url": "https://www.wbdg.org/FFC/DOD/UFGS/22%2000%2000.pdf"
+  },
+  "UFGS-23-05-93": {
+    "bytes": 165362,
+    "sha256": "11c7cb8d9e2bcb1d32b915bac4abc6e65e9856f337b45ce271f8b6f129c2e3d1",
+    "split": "train",
+    "title": "Testing, Adjusting, and Balancing for HVAC",
+    "url": "https://www.wbdg.org/FFC/DOD/UFGS/UFGS%2023%2005%2093.pdf"
+  },
+  "UFGS-23-07-00": {
+    "bytes": 248168,
+    "sha256": "77cce995c5b7368f2577ed5e6cafb30e876d75bf2a0574bacf2d09a5237007b1",
+    "split": "train",
+    "title": "Thermal Insulation for Mechanical Systems",
+    "url": "https://www.wbdg.org/FFC/DOD/UFGS/UFGS%2023%2007%2000.pdf"
+  },
+  "UFGS-23-08-00": {
+    "bytes": 69338,
+    "sha256": "372430094954cd17a3e2f5ce16f644055aa3026db7f18a63c9ddcc075ca73ce4",
+    "split": "train",
+    "title": "Commissioning of HVAC Systems",
+    "url": "https://www.wbdg.org/FFC/DOD/UFGS/UFGS%2023%2008%2000.pdf"
+  },
+  "UFGS-23-30-00": {
+    "bytes": 299088,
+    "sha256": "ea384cba273ef02da7ebcf6bc87f7d008870d4780678a88095110202fab88fb9",
+    "split": "train",
+    "title": "HVAC Air Distribution",
+    "url": "https://www.wbdg.org/FFC/DOD/UFGS/UFGS%2023%2030%2000.pdf"
+  },
+  "UFGS-23-31-13.00-40": {
+    "bytes": 158891,
+    "sha256": "5ac140f252ed5cd011f53c7c9b32b9efa292d94753c5489c7300ffe8ce9d3989",
+    "split": "holdout",
+    "title": "Metal Ducts (NASA)",
+    "url": "https://www.wbdg.org/FFC/NASA/UFGS/UFGS%2023%2031%2013.00%2040.pdf"
+  }
+}

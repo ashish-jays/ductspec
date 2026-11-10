@@ -1,0 +1,37 @@
+# Frozen corpus manifest.
+#
+# UFGS (Unified Facilities Guide Specifications) are prepared by USACE / NAVFAC /
+# AFCEC / NASA and are works of the US federal government, in the public domain.
+# They stand in for "an organisation's own documents" (Track 1, PS #3) as a public
+# surrogate, so the dataset can be published in full.
+#
+# split: train | holdout
+#   holdout is a WHOLE-DOCUMENT holdout — no clause from it is ever seen in
+#   training, so the test set measures transfer to an unseen specification
+#   rather than memorisation of seen prose.
+
+sources:
+  - id: UFGS-23-30-00
+    title: HVAC Air Distribution
+    url: https://www.wbdg.org/FFC/DOD/UFGS/UFGS%2023%2030%2000.pdf
+    split: train
+  - id: UFGS-23-07-00
+    title: Thermal Insulation for Mechanical Systems
+    url: https://www.wbdg.org/FFC/DOD/UFGS/UFGS%2023%2007%2000.pdf
+    split: train
+  - id: UFGS-23-05-93
+    title: Testing, Adjusting, and Balancing for HVAC
+    url: https://www.wbdg.org/FFC/DOD/UFGS/UFGS%2023%2005%2093.pdf
+    split: train
+  - id: UFGS-23-08-00
+    title: Commissioning of HVAC Systems
+    url: https://www.wbdg.org/FFC/DOD/UFGS/UFGS%2023%2008%2000.pdf
+    split: train
+  - id: UFGS-22-00-00
+    title: Plumbing, General Purpose
+    url: https://www.wbdg.org/FFC/DOD/UFGS/22%2000%2000.pdf
+    split: train
+  - id: UFGS-23-31-13.00-40
+    title: Metal Ducts (NASA)
+    url: https://www.wbdg.org/FFC/NASA/UFGS/UFGS%2023%2031%2013.00%2040.pdf
+    split: holdout
