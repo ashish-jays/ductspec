@@ -1,0 +1,26 @@
+# Control sets. These answer "did the domain fine-tune break anything else?"
+# They are never trained on — they are run three times, against the base model
+# and both adapters, and reported beside the task metrics.
+
+safety:
+  dataset: Paul/XSTest
+  split: train
+  licence: CC BY-4.0
+  rows: 450
+  # XSTest is one set carrying both halves of the safety question, labelled in
+  # a `label` column: 250 safe prompts that a over-cautious model wrongly
+  # refuses, and 200 unsafe prompts it should refuse. Measuring only one half
+  # is how a fine-tune looks safe by becoming useless, or useful by becoming
+  # unsafe.
+  measures:
+    - harmful_compliance   # label == unsafe, model complied
+    - over_refusal         # label == safe, model refused
+
+capability:
+  dataset: allenai/ai2_arc
+  config: ARC-Easy
+  split: test
+  licence: CC BY-SA 4.0
+  sample: 100          # fixed sample, seeded, frozen before any training
+  # Exact-match on answerKey. Cheap, unambiguous, and unrelated to the domain,
+  # so a drop here means the fine-tune damaged general ability.

@@ -170,9 +170,9 @@ publish the actual count and do not invent atoms to meet it.
 | Material | 360 | 54 | 108 |
 | Insulation thickness | 360 | 54 | 108 |
 | Pressure rating | 80 | 12 | 24 |
-| Direct comparison / simple provenance | 256 | 40 | 80 |
-| Applicability, distractors, document injection | 256 | 40 | 80 |
-| Cross-reference / genuine authority conflict | 288 | 40 | 80 |
+| Direct comparison / simple provenance | 320 | 48 | 96 |
+| Applicability, distractors, document injection | 320 | 48 | 96 |
+| Cross-reference completeness / sufficiency | 160 | 24 | 48 |
 
 These are marginal quotas, not a requirement to populate every cross-product
 cell. NASA can contribute only supported properties; put the 24 test pressure
@@ -183,9 +183,16 @@ Count disjoint pairs, not a shared base counted five times:
 
 | Pair type | Train per arm | Dev | Test |
 |---|---:|---:|---:|
-| Each existing type (five types) | 64 | 10 | 20 |
-| Reference-completeness pair | 80 | 10 | 20 |
+| Each retained existing type (four types) | 80 | 12 | 24 |
+| Reference-completeness pair | 80 | 12 | 24 |
 | Total pairs | 400 | 60 | 120 |
+
+The four retained types are provenance relabeling, missing observation,
+inapplicable authority, and document injection. Exclude precedence-removal
+rows from the minimum submission until there is an audited, genuinely
+incompatible pair of requirements applying to the same scoped object.
+Two different minimum insulation thicknesses alone are compatible: meeting
+the larger may satisfy both. A lower minimum is not an exclusive mandate.
 
 All rows belong to one disjoint evaluation pair. Invariance pairs may start
 from abstentions as well as definitive cases; this permits the verdict mix
@@ -193,10 +200,11 @@ above and avoids making every injected/distractor record answerable. Balance
 both COMPLIANT and NON_COMPLIANT endpoints. Preserve class/variant balance
 across citation order and surface wording.
 
-Within the 96 test abstentions, target 24 inferred-value-only, 20 missing
-observation, 24 missing authority, 16 unresolved conflict, and 12 applicability
-unknown; give each record one unambiguous dominant blocker. Ambiguous
-association can wait. Use independent origin types in answerable and
+Within the 96 test abstentions, target 24 each of inferred-value-only, missing
+observation, missing authority, and applicability unknown; give each record
+one unambiguous dominant blocker. The 24 applicability abstentions can occupy
+12 invariance pairs. Unresolved conflict and ambiguous association can wait.
+Use independent origin types in answerable and
 unanswerable records so origin alone does not settle the full task.
 
 Score base/raw/curated with fixed decoding on the same frozen examples.
