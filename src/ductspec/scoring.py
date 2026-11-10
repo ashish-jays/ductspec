@@ -51,12 +51,19 @@ def is_supported(gold: dict, pred: dict) -> bool:
     if verdict in DEFINITIVE:
         if not _has_independent_evidence(gold):
             return False
-        return set(pred.get("governing_ids") or []) == set(gold["target"]["governing_ids"])
+        if set(pred.get("governing_ids") or []) != set(gold["target"]["governing_ids"]):
+            return False
+        # Which observation the model relied on is part of the answer. A verdict
+        # that cites the right clause but points at nothing — or at an id that
+        # is not in the object — has not shown its working.
+        return set(pred.get("observation_ids") or []) == set(gold["target"]["observation_ids"])
 
     return set(pred.get("missing_evidence") or []) == set(gold["target"]["missing_evidence"])
 
 
-def score_one(gold: dict, pred: dict) -> dict:
+def score_one(gold: dict, pred: dict | None) -> dict:
+    # An unparseable generation is a failure, not an exception.
+    pred = pred or {}
     g, verdict = gold["target"], pred.get("verdict")
     correct_verdict = verdict == g["verdict"]
     supported = is_supported(gold, pred)
@@ -64,7 +71,9 @@ def score_one(gold: dict, pred: dict) -> dict:
     return {
         "schema_valid": verdict in VERDICTS,
         "correct_verdict": correct_verdict,
-        "strict": correct_verdict and supported,
+        # The whole answer, not just its headline: the verdict, the evidence it
+        # rests on, and what the reviewer is told to do next.
+        "strict": correct_verdict and supported and pred.get("action") == g["action"],
         "definitive": verdict in DEFINITIVE,
         # An unsupported verdict is a confident answer the evidence does not carry.
         "unsupported": verdict in DEFINITIVE and not supported,

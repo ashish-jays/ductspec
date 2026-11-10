@@ -8,6 +8,16 @@
 # plus the source, clause id and page, so a reviewer can open the PDF and
 # check it against the page.
 #
+# A correction worth recording. This file first cited the VA liner requirement
+# as clause 2.2.B with no conditions. Both were wrong: a bug in the designer-
+# note stripper had deleted the heading "2.3 DUCT LINER (WHERE INDICATED ON
+# DRAWINGS)", which both renumbered the paragraph and removed the condition
+# that limits it. The requirement would have entered the dataset as universal,
+# under an id that does not exist. That is the project's own failure mode —
+# asserting a requirement nobody adopted — committed by its own parser, which
+# is why every requirement here is audited against the PDF page rather than
+# against parser output.
+#
 # predicate:
 #   in        — the observed value must be one of `values`
 #   at_least  — the observed value must be >= `value` (numeric)
@@ -110,11 +120,18 @@ requirements:
     predicate: {op: in, values: [galvanized_steel, aluminum]}
     quote: "construct ducts and accessories of galvanized sheet steel, ASTM A653/A653M, coating G90; or, aluminum sheet, ASTM B209, alloy 1100, 3003, or 5052."
 
-  - id: R-VA-2.2.B-liner
+  - id: R-VA-2.3.B-liner
     source: VA-23-31-00
-    clause_id: 2.2.B
+    clause_id: 2.3.B
     page: 9
     property: insulation_thickness_in
-    applies_to: {systems: [], element: acoustical_liner}
+    applies_to: {systems: [], element: acoustical_liner, condition: lining_indicated_on_drawings}
     predicate: {op: at_least, value: 1.0}
     quote: "Rectangular Duct Liner: ASTM C1071, Type I (flexible), or Type II (board), 25 mm (one inch) minimum thickness"
+    note: >-
+      The parent heading is "2.3 DUCT LINER (WHERE INDICATED ON DRAWINGS)", so
+      the requirement is conditional: it binds only where the drawings call for
+      lining. If the object does not establish whether lining is indicated, the
+      answer is APPLICABILITY_UNKNOWN, not a thickness comparison. An earlier
+      version of this file cited it as 2.2.B with no condition, because the
+      parser had deleted the heading — see the note at the top of this file.

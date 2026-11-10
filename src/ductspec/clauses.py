@@ -60,6 +60,10 @@ class Clause:
     convention: str = "ufgs"
 
 
+def _heading_re(convention: Convention) -> re.Pattern:
+    return re.compile(rf"^(\d+\.\d+(?:\.\d+)*){convention.heading_gap}(\S.*)$")
+
+
 def strip_designer_notes(text: str, convention: Convention = UFGS) -> str:
     """Remove instructions addressed to the engineer editing the specification.
 
@@ -71,12 +75,13 @@ def strip_designer_notes(text: str, convention: Convention = UFGS) -> str:
         parts = convention.note_block.split(text)
         return "\n".join(p for p in parts if not convention.note_marker.search(p))
 
+    heading = _heading_re(convention)
     out, skipping = [], False
     for line in text.split("\n"):
         if convention.note_marker.search(line):
             skipping = True
             continue
-        if skipping and (CLAUSE_INLINE.match(line) or CLAUSE_NUM.match(line)
+        if skipping and (heading.match(line) or CLAUSE_NUM.match(line)
                          or PART.match(line.strip()) or LETTERED.match(line.strip())):
             skipping = False
         if not skipping:

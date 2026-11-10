@@ -28,6 +28,31 @@ def load_manifest() -> list[dict]:
     return yaml.safe_load(MANIFEST.read_text())["sources"]
 
 
+class CorpusChanged(RuntimeError):
+    """A source no longer matches the hash the dataset was built from."""
+
+
+def verify() -> dict[str, dict]:
+    """Check every local PDF against the lockfile. Call before building data.
+
+    UFGS and VA sections are revised in place, so a silent re-download would
+    change the evidence under a dataset that is already labelled.
+    """
+    lock = json.loads(LOCKFILE.read_text())
+    for sid, meta in lock.items():
+        path = PDF_DIR / f"{sid}.pdf"
+        if not path.exists():
+            raise CorpusChanged(f"{sid}: missing — run `python -m ductspec.sources`")
+        actual = hashlib.sha256(path.read_bytes()).hexdigest()
+        if actual != meta["sha256"]:
+            raise CorpusChanged(
+                f"{sid}: sha256 {actual[:12]} does not match the locked "
+                f"{meta['sha256'][:12]}. The published section was revised; "
+                "re-audit the requirements before rebuilding."
+            )
+    return lock
+
+
 def fetch_all(force: bool = False) -> dict[str, dict]:
     """Download every source, hash it, and write data/sources.lock.json."""
     PDF_DIR.mkdir(parents=True, exist_ok=True)

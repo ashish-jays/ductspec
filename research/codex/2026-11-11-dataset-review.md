@@ -1,15 +1,19 @@
 # DuctSpec dataset review — 2026-11-11
 
-Review only. No product code changed. Existing edits to `clauses.py` and the
-untracked `screening.py` were present before this review.
+Review only. I did not change product code. The review started at `db5fe87`
+with existing edits to `clauses.py` and an untracked `screening.py`. Another
+process advanced the checkout to `546479c` during the review, adding the VA
+holdout and convention parser, and included the first version of this note in
+that commit. The recommendations below incorporate the changed checkout.
 
 ## Verified state
 
-- Read README, all eight source modules, manifest/lock, budget script, and tests.
-- Fresh test run: **25 passed**, using:
+- Read README, the requested source modules, manifest/lock, budget script, tests,
+  and subsequently the new `conventions.py` and updated clause parser.
+- Final fresh test run: **27 passed** (initial run: 25), using:
   `PYTHONPATH=src uv run --no-project --python 3.12 --with pytest --with pypdf --with pyyaml pytest -q -p no:cacheprovider`
-- All six downloaded PDFs match the checked-in SHA-256 values.
-- Current shortlist computation returns **200**, whereas
+- All eight PDFs in the updated manifest match its checked-in SHA-256 values.
+- Shortlisting the original six UFGS sources returns **200**, whereas
   `data/build/shortlist.json` contains 207. Current per-source counts:
   23 30 00: 72; 23 07 00: 76; 23 05 93: 5; 23 08 00: 1;
   22 00 00: 33; NASA Metal Ducts: 13. This artifact needs regeneration.
@@ -27,21 +31,25 @@ pressure rating, pressure drop, test pressure, or positive and negative ratings.
 
 ### (b) Split
 
-Keep NASA Metal Ducts as the whole-document transfer panel. The shortlist is
-partly an extraction artifact; changing documents based on screen counts is
-premature. Do not hold out 23 07 00: it supplies much of the actual insulation
-content and the natural cross-reference task. Do not hold out two documents.
+Freeze the newly added VA issuing-authority holdout in the current checkout:
+six UFGS training sources, VA Ducts and VA Insulation excluded from training.
+The different wording and editing marks give this change a substantive transfer
+rationale, rather than simply a larger shortlist. Do not make another swap.
+Do not remove UFGS 23 07 00 from training: it supplies much of the actual
+insulation content and the natural cross-reference task. If reviewing only the
+original six-source design, my initial recommendation was to keep NASA rather
+than rotate UFGS sections based on noisy screen counts.
 
 Use two explicitly separate test panels: 160 new scenario records against
-known training authorities, and 80 NASA records for document transfer. The
+known training authorities, and 80 VA records for document transfer. The
 first measures new combinations of observations, provenance, applicability,
 and packet contents; it does **not** measure unseen-rule generalization.
-The NASA panel is exploratory transfer on one document, not a broad estimate.
+The VA panel is exploratory transfer on two documents, not a broad estimate.
 If a panel cannot supply a particular property or verdict, disclose that;
 do not fabricate authority to fill the cell.
 
 Keep every scenario family, its twins, wording variants, and packet variants
-in one split. Keep NASA content out of every training role, including
+in one split. Keep VA content out of every training role, including
 distractors, question generation, and curation examples. Detect near-verbatim
 cross-document duplication. Use development data alone for model decisions.
 Public UFGS may be in base-model pretraining: say unseen during this project's
@@ -175,8 +183,8 @@ publish the actual count and do not invent atoms to meet it.
 | Cross-reference completeness / sufficiency | 160 | 24 | 48 |
 
 These are marginal quotas, not a requirement to populate every cross-product
-cell. NASA can contribute only supported properties; put the 24 test pressure
-rows in the known-authority scenario panel if NASA supplies no usable pressure
+cell. VA can contribute only supported properties; put the 24 test pressure
+rows in the known-authority scenario panel if VA supplies no usable pressure
 requirement. Never label equipment pressure drop as duct rating to fill quotas.
 
 Count disjoint pairs, not a shared base counted five times:
@@ -222,8 +230,8 @@ Suggested write-up language:
 > counterfactual and wording variant, were confined to one split. The primary
 > panel tests new evidence/provenance combinations under known authorities;
 > it does not establish unseen-rule generalization. A separate exploratory
-> panel uses NASA Metal Ducts, excluded from fine-tuning in every role,
-> to assess transfer to one additional document. We screened cross-document
+> panel uses two VA sections, excluded from fine-tuning in every role,
+> to assess transfer to another issuing authority. We screened cross-document
 > near-duplicates and report the number of governing requirement families
 > alongside the number of synthetic records. Public-source pretraining
 > contamination cannot be ruled out.
@@ -280,6 +288,16 @@ Use that wording only after the corresponding checks are actually performed.
 10. Training/evaluation kit integrations, requirement extraction/evaluation,
     artifact publication, and demo remain future pipeline work in this checkout;
     dependencies in pyproject are not evidence of a functioning kit chain.
+11. The concurrently added VA parser has a reproduced context-loss bug:
+    `strip_designer_notes` resumes at headings using the UFGS two-space heading
+    regex instead of VA's one-space convention. After a writer note it deletes
+    heading `2.3 DUCT LINER (WHERE INDICATED ON DRAWINGS)`, resumes at subparagraph
+    A, and assigns the liner text to duplicate `2.2.A` and `2.2.B` IDs.
+    `3.2.A` is duplicated too. Every page number remains nonzero, so existing
+    location assertions do not catch this. The true minimum liner requirement
+    is conditional on drawings indicating a liner, a condition lost with that
+    heading. Manually audit test spans and identifiers before using this panel.
+    The new optional-text flag helps triage, but does not establish adoption.
 
 ## Deadline and execution recommendation
 
