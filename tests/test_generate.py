@@ -112,6 +112,11 @@ def test_the_provenance_twins_differ_only_in_origin(splits):
         filled = [t for o, t in members if o not in INDEPENDENT_ORIGINS]
         if not shown or not filled:
             continue
+        # Where no authority settles the question, both members abstain for
+        # that reason and provenance never comes up — correct, and covered by
+        # its own test below.
+        if not all(t["verdict"] in ("COMPLIANT", "NON_COMPLIANT") for t in shown):
+            continue
         for t in filled:
             assert t["verdict"] == "INSUFFICIENT_EVIDENCE"
             assert t["missing_evidence"] == ["INFERRED_VALUE_ONLY"]
@@ -123,3 +128,28 @@ def test_the_provenance_twins_differ_only_in_origin(splits):
         found += 1
 
     assert found, "the dataset must contain same-value, different-provenance pairs"
+
+
+def test_authority_is_settled_before_provenance_is_asked(splits):
+    """Where nothing supplied governs the property, the answer is
+    MISSING_AUTHORITY whether or not the value was read off the drawing.
+
+    Reporting INFERRED_VALUE_ONLY there would tell the reviewer to go and find
+    a drawing detail, when the real problem is that the specification section
+    is missing from the packet. Different finding, different person to ask.
+    """
+    rows = [r for rows in splits.values() for r in rows]
+    blocked = [
+        r for r in rows
+        if r["target"]["missing_evidence"] == ["MISSING_AUTHORITY"]
+        and (r["input"]["object"]["properties"].get(r["target"]["scope"]) or {}).get("value")
+        is not None
+    ]
+    assert blocked, "the data must contain cases where no supplied clause governs"
+
+    origins = {
+        r["input"]["object"]["properties"][r["target"]["scope"]]["origin"] for r in blocked
+    }
+    assert origins & set(INDEPENDENT_ORIGINS), "including some read off the drawing"
+    for r in blocked:
+        assert r["target"]["action"] != "NONE_FOR_THIS_CHECK"
