@@ -1,0 +1,161 @@
+# The requirement extractions BEFORE audit — the raw arm of the ablation.
+#
+# HOW TO READ THIS FILE, honestly stated.
+#
+# This is a RECONSTRUCTION, not a contemporaneous capture. The faults below are
+# real: each one was in the working requirement set at some point on 11 November
+# 2026 and is recorded in the repository history. But the file itself was
+# written after the audit, by restoring what the audit had changed. We did not
+# have the foresight to snapshot the pre-audit state, and saying otherwise would
+# be the same kind of claim this project exists to refuse.
+#
+# The evidence that these faults occurred, rather than being invented to create
+# an effect, is in the commits that fixed them:
+#
+#   5cc5eae  "a spec writer's unresolved choice is not a requirement"
+#            The alternatives pattern capped each option at 60 characters. UFGS
+#            3.2.7.1's first option is exactly 60, so the clause passed as
+#            operative and was citable as settled authority on a kitchen
+#            exhaust question.
+#
+#   e71f1b7  "the parser manufactured a requirement nobody adopted"
+#            Designer-note stripping used the UFGS heading shape on a VA
+#            document. VA headings use one space, so the skip ran past
+#            "2.3 DUCT LINER (WHERE INDICATED ON DRAWINGS)" and deleted it.
+#            The requirement was recorded as 2.2.B, universal.
+#
+# Two of the four faults came from our own parser rather than from careless
+# reading, which is the part worth keeping in mind: both files look equally
+# confident, and only opening the document tells them apart.
+#
+# What is wrong here, and how the audit found it:
+#
+#   R-VA-2.2.B-liner      cites a clause id that does not exist, and states as
+#                         universal a requirement that binds only "where
+#                         indicated on drawings". The heading carrying that
+#                         condition had been deleted by a bug in the designer-
+#                         note stripper, so its paragraphs inherited the
+#                         previous article's numbering. Audited to 2.3.B with
+#                         its condition.
+#
+#   R-UFGS-3.2.7.1-material
+#                         cites a clause that offers the designer two materials
+#                         side by side and asks them to choose. Until they do
+#                         there is no requirement. The operativity check missed
+#                         it because the alternatives pattern capped each option
+#                         at 60 characters and the first is exactly 60. Dropped
+#                         by the audit.
+#
+#   R-UFGS-3.2.7.2-material
+#                         scoped to every system, when the clause sits under
+#                         "3.2.7 Kitchen Exhaust Ductwork" and inherits that
+#                         subject. Audited to kitchen_exhaust only.
+#
+#   R-UFGS-2.12.10.1-material
+#                         scoped to ducts, when the clause is about plenums and
+#                         casings. Audited to that element.
+#
+# Everything else matches the audited file.
+
+requirements:
+  - id: R-UFGS-2.12.10.1-material
+    source: UFGS-23-30-00
+    clause_id: 2.12.10.1
+    page: 35
+    property: material
+    applies_to: {systems: [], element: duct}
+    predicate: {op: in, values: [galvanized_steel]}
+    quote: "Construct system casing of not less than 1.6 mm 16 gauge galvanized sheet steel."
+
+  - id: R-UFGS-2.12.11.3-liner
+    source: UFGS-23-30-00
+    clause_id: 2.12.11.3
+    page: 37
+    property: insulation_thickness_in
+    applies_to: {systems: [], element: acoustical_liner}
+    predicate: {op: at_least, value: 1.0}
+    quote: "Provide not less than 25 mm 1 inch thick coated lining."
+
+  - id: R-UFGS-2.12.17-material
+    source: UFGS-23-30-00
+    clause_id: 2.12.17
+    page: 42
+    property: material
+    applies_to: {systems: [], element: double_wall_inner}
+    predicate: {op: in, values: [galvanized_steel]}
+    quote: "provide double wall pre-insulated ductwork with minimum 24 gauge solid galvanized inner wall"
+
+  - id: R-UFGS-2.12.1.1-pressure
+    source: UFGS-23-30-00
+    clause_id: 2.12.1.1
+    page: 29
+    property: pressure_rating_in_wg
+    applies_to: {systems: [], element: metallic_flexible_duct}
+    predicate: {op: at_least, value: 2.0}
+    quote: "Provide ducts designed for working pressures of 497 Pa 2 inches water gauge positive pressure"
+
+  # Cites an unmade choice between two materials.
+  - id: R-UFGS-3.2.7.1-material
+    source: UFGS-23-30-00
+    clause_id: 3.2.7.1
+    page: 79
+    property: material
+    applies_to: {systems: [], element: duct}
+    predicate: {op: in, values: [stainless_steel_304, stainless_steel_316]}
+    quote: "Provide duct material that is a [minimum 1.3 mm 18 gauge , Type 304L or 316L, stainless steel] [minimum 1.6 mm 16 gauge carbon steel]."
+
+  # Scoped to every system; the clause inherits "Kitchen Exhaust Ductwork".
+  - id: R-UFGS-3.2.7.2-material
+    source: UFGS-23-30-00
+    clause_id: 3.2.7.2
+    page: 80
+    property: material
+    applies_to: {systems: [], element: exposed_ductwork}
+    predicate: {op: in, values: [stainless_steel_304, stainless_steel_316]}
+    quote: "Provide exposed ductwork that is fabricated from minimum 1.3 mm 18 gauge , Type 304L or 316L, stainless steel with continuously welded joints and seams."
+
+  - id: R-UFGS-3.2.5.1-material
+    source: UFGS-23-30-00
+    clause_id: 3.2.5.1
+    page: 78
+    property: material
+    applies_to: {systems: [], element: underground_duct}
+    predicate: {op: in, values: [galvanized_steel]}
+    quote: "PVS must consist of prime, hot-dipped, G-90 galvanized steel"
+
+  - id: R-UFGS-3.2.11-reference
+    source: UFGS-23-30-00
+    clause_id: 3.2.11
+    page: 81
+    property: insulation_thickness_in
+    applies_to: {systems: [], element: duct}
+    predicate: {op: reference, target: UFGS-23-07-00}
+    quote: "Provide thickness and application of insulation materials for ductwork, piping, and equipment according to Section 23 07 00 THERMAL INSULATION FOR MECHANICAL SYSTEMS."
+
+  - id: R-UFGS-2.4.5-insulation
+    source: UFGS-23-07-00
+    clause_id: 2.4.5
+    page: 24
+    property: insulation_thickness_in
+    applies_to: {systems: [kitchen_exhaust], element: duct}
+    predicate: {op: at_least, value: 2.0}
+    quote: "Ensure insulation thickness is a minimum of 50 mm 2 inches , blocks or boards"
+
+  - id: R-VA-2.1.A-material
+    source: VA-23-31-00
+    clause_id: 2.1.A
+    page: 7
+    property: material
+    applies_to: {systems: [], element: duct}
+    predicate: {op: in, values: [galvanized_steel, aluminum]}
+    quote: "construct ducts and accessories of galvanized sheet steel, ASTM A653/A653M, coating G90; or, aluminum sheet, ASTM B209, alloy 1100, 3003, or 5052."
+
+  # Wrong clause id, and the "where indicated on drawings" condition is gone.
+  - id: R-VA-2.2.B-liner
+    source: VA-23-31-00
+    clause_id: 2.2.B
+    page: 9
+    property: insulation_thickness_in
+    applies_to: {systems: [], element: acoustical_liner}
+    predicate: {op: at_least, value: 1.0}
+    quote: "Rectangular Duct Liner: ASTM C1071, Type I (flexible), or Type II (board), 25 mm (one inch) minimum thickness"

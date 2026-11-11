@@ -153,3 +153,49 @@ def test_authority_is_settled_before_provenance_is_asked(splits):
     assert origins & set(INDEPENDENT_ORIGINS), "including some read off the drawing"
     for r in blocked:
         assert r["target"]["action"] != "NONE_FOR_THIS_CHECK"
+
+
+# --- the two training arms --------------------------------------------------
+
+def test_the_arms_differ_only_in_which_requirements_were_sound():
+    """The ablation. Same generator, same seed, same family-to-split
+    assignment, same test set, same number of training records — the only
+    difference is that the raw arm was built from an unaudited requirement set.
+    """
+    from ductspec.generate import build_arms
+
+    arms = build_arms()
+    raw, curated = arms["raw"], arms["curated"]
+
+    assert raw["test"] == curated["test"], "the evaluation cannot depend on the arm"
+    assert raw["dev"] == curated["dev"]
+    assert len(raw["train"]) == len(curated["train"]), "token exposure must match"
+
+    raw_reqs = {r["meta"]["requirement"] for r in raw["train"]}
+    cur_reqs = {r["meta"]["requirement"] for r in curated["train"]}
+
+    # Exactly one faulty requirement separates them: UFGS 3.2.7.1 offers the
+    # engineer two materials for grease-laden duct and asks them to choose.
+    assert raw_reqs - cur_reqs == {"R-UFGS-3.2.7.1-material"}
+    assert cur_reqs - raw_reqs == set()
+
+
+def test_a_familys_split_does_not_depend_on_what_else_was_generated():
+    """A family lands in the same split whichever arm is being built. Otherwise
+    the ablation measures the shuffle."""
+    from ductspec.generate import build, build_arms
+    from ductspec.requirements import load
+
+    arms = build_arms()
+    where = {}
+    for arm, splits in arms.items():
+        for split, rows in splits.items():
+            for row in rows:
+                key = (arm, row["family"])
+                assert where.setdefault(key, split) == split
+
+    full = build(requirements=load())
+    full_where = {r["family"]: s for s, rows in full.items() for r in rows}
+    for (arm, family), split in where.items():
+        if family in full_where and arm == "curated":
+            assert full_where[family] == split, family

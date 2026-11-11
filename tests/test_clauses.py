@@ -164,6 +164,7 @@ def test_instruction_in_drawing_text_must_not_move_the_answer():
     assert twin["target"]["verdict"] == base["target"]["verdict"]
 
 
+@pytest.mark.skipif(not (SOURCES / "UFGS-23-30-00.pdf").exists(), reason="run ductspec.sources first")
 def test_side_by_side_alternatives_are_not_citable():
     """UFGS 23 30 00 clause 3.2.7.1 offers two materials for grease-laden duct:
     18 ga 304L/316L stainless, or 16 ga carbon steel. Until the designer picks
