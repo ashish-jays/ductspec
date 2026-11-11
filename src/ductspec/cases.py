@@ -80,7 +80,7 @@ def strip_provenance(rec: dict, clause_id: str) -> dict:
         verdict="INSUFFICIENT_EVIDENCE",
         observation_ids=[],
         missing_evidence=["INFERRED_VALUE_ONLY"],
-        action="REQUEST_MISSING_DETAIL",
+        action="FOLLOW_SPEC_RECORD_AS_SPEC_DERIVED",
         reason="The only value available was copied from the requirement being checked.",
     )
     return validate_record(out)
@@ -96,7 +96,7 @@ def remove_observation(rec: dict) -> dict:
         verdict="INSUFFICIENT_EVIDENCE",
         observation_ids=[],
         missing_evidence=["MISSING_OBSERVATION"],
-        action="REQUEST_MISSING_DETAIL",
+        action="FOLLOW_SPEC_RECORD_AS_SPEC_DERIVED",
         reason="The drawing does not show this property.",
     )
     return validate_record(out)

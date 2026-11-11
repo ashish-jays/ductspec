@@ -11,7 +11,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from ductspec.prompt import INSTRUCTION  # noqa: E402
+from ductspec.prompt import INSTRUCTION, view  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 SPACE = ROOT / "space"
@@ -36,7 +36,10 @@ def main() -> None:
         if len(chosen) >= 6:
             break
 
-    (SPACE / "examples.json").write_text(json.dumps(chosen, indent=1))
+    # The Space edits and submits the packet as the model sees it, so the
+    # examples carry the view, not the record with its answer key.
+    shown = [{**row, "input": view(row["input"])} for row in chosen]
+    (SPACE / "examples.json").write_text(json.dumps(shown, indent=1))
     (SPACE / "instruction.txt").write_text(INSTRUCTION)
 
     replay = {}
@@ -45,7 +48,7 @@ def main() -> None:
         outputs = {json.loads(l)["id"]: json.loads(l)["output"] for l in saved.open()}
         for row in chosen:
             if row["id"] in outputs:
-                replay[json.dumps(row["input"], sort_keys=True)] = outputs[row["id"]]
+                replay[json.dumps(view(row["input"]), sort_keys=True)] = outputs[row["id"]]
     (SPACE / "replay.json").write_text(json.dumps(replay, indent=1))
 
     print(f"examples: {len(chosen)}  replay entries: {len(replay)}")

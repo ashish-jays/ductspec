@@ -56,6 +56,8 @@ class DuctObject:
     # {"lining_indicated_on_drawings": True}. A fact that is absent is unknown,
     # which is a different thing from false.
     facts: dict[str, bool] = field(default_factory=dict)
+    # The sheet this duct is drawn on. Drawing line ids are built from it.
+    sheet: str = "M101"
 
     def __post_init__(self) -> None:
         if self.system not in SYSTEMS:

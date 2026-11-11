@@ -6,23 +6,33 @@
   "panel": "transfer",
   "input": {
    "question": "Does D-700's material meet the supplied requirement?",
-   "object": {
+   "duct": {
     "id": "D-700",
     "system": "supply_air",
     "dimensions_in": [
      20,
      12
     ],
-    "element": "duct",
-    "properties": {
-     "material": {
-      "value": "galvanized_steel",
-      "origin": "DRAWING_ANNOTATION",
-      "source_id": "M101-note8",
-      "source_text": "D-700: 20x12"
-     }
-    }
+    "element": "duct"
    },
+   "takeoff": {
+    "property": "material",
+    "value": "galvanized_steel"
+   },
+   "drawing": [
+    {
+     "id": "M101-tag-D-700",
+     "text": "D-700: 20x12 SA"
+    },
+    {
+     "id": "M101-note8",
+     "text": "D-698 THRU D-703: GALV"
+    },
+    {
+     "id": "M101-tag-D-707",
+     "text": "D-707: 20x12 SST304 SA"
+    }
+   ],
    "evidence": [
     {
      "id": "2.1.A",
@@ -36,7 +46,7 @@
    ],
    "policy": {
     "id": "POLICY-1",
-    "text": "Review only the requested property, using only the supplied evidence. A value that was not read from the drawing does not establish what the drawing shows."
+    "text": "Review only the requested property, using only the supplied evidence. A value that was not read from the drawing does not establish what the drawing shows. FAR 52.236-21 applies: anything mentioned in the specifications and not shown on the drawings is of like effect as if shown in both, so where the drawing is silent the specification still applies and the value is recorded as specification-derived. Only a difference between the drawing and the specification is submitted for a written determination."
    }
   },
   "target": {
@@ -65,22 +75,29 @@
   "panel": "transfer",
   "input": {
    "question": "Does D-707's material meet the supplied requirement?",
-   "object": {
+   "duct": {
     "id": "D-707",
     "system": "supply_air",
     "dimensions_in": [
      20,
      12
     ],
-    "element": "duct",
-    "properties": {
-     "material": {
-      "value": "galvanized_steel",
-      "origin": "COPIED_FROM_SPEC",
-      "source_id": "2.1.A"
-     }
-    }
+    "element": "duct"
    },
+   "takeoff": {
+    "property": "material",
+    "value": "galvanized_steel"
+   },
+   "drawing": [
+    {
+     "id": "M101-note16",
+     "text": "ALL RETURN AIR DUCTS: GALV U.N.O."
+    },
+    {
+     "id": "M101-tag-D-707",
+     "text": "D-707: 20x12 SA"
+    }
+   ],
    "evidence": [
     {
      "id": "2.1.A",
@@ -94,7 +111,7 @@
    ],
    "policy": {
     "id": "POLICY-1",
-    "text": "Review only the requested property, using only the supplied evidence. A value that was not read from the drawing does not establish what the drawing shows."
+    "text": "Review only the requested property, using only the supplied evidence. A value that was not read from the drawing does not establish what the drawing shows. FAR 52.236-21 applies: anything mentioned in the specifications and not shown on the drawings is of like effect as if shown in both, so where the drawing is silent the specification still applies and the value is recorded as specification-derived. Only a difference between the drawing and the specification is submitted for a written determination."
    }
   },
   "target": {
@@ -108,7 +125,7 @@
    "missing_evidence": [
     "INFERRED_VALUE_ONLY"
    ],
-   "action": "REQUEST_MISSING_DETAIL",
+   "action": "FOLLOW_SPEC_RECORD_AS_SPEC_DERIVED",
    "reason": "The only value available was not read from the drawing, so it cannot show that the drawing complies."
   },
   "meta": {
@@ -123,23 +140,25 @@
   "panel": "transfer",
   "input": {
    "question": "Does D-720's material meet the supplied requirement?",
-   "object": {
+   "duct": {
     "id": "D-720",
     "system": "return_air",
     "dimensions_in": [
      36,
      18
     ],
-    "element": "duct",
-    "properties": {
-     "material": {
-      "value": "galvanized_steel",
-      "origin": "DRAWING_ANNOTATION",
-      "source_id": "M102-note1",
-      "source_text": "D-720: 36x18"
-     }
-    }
+    "element": "duct"
    },
+   "takeoff": {
+    "property": "material",
+    "value": "galvanized_steel"
+   },
+   "drawing": [
+    {
+     "id": "M102-note1",
+     "text": "D-720: 36x18 GALV RA"
+    }
+   ],
    "evidence": [
     {
      "id": "2.1.A",
@@ -153,7 +172,7 @@
    ],
    "policy": {
     "id": "POLICY-1",
-    "text": "Review only the requested property, using only the supplied evidence. A value that was not read from the drawing does not establish what the drawing shows."
+    "text": "Review only the requested property, using only the supplied evidence. A value that was not read from the drawing does not establish what the drawing shows. FAR 52.236-21 applies: anything mentioned in the specifications and not shown on the drawings is of like effect as if shown in both, so where the drawing is silent the specification still applies and the value is recorded as specification-derived. Only a difference between the drawing and the specification is submitted for a written determination."
    }
   },
   "target": {
@@ -182,22 +201,29 @@
   "panel": "transfer",
   "input": {
    "question": "Does D-727's material meet the supplied requirement?",
-   "object": {
+   "duct": {
     "id": "D-727",
     "system": "return_air",
     "dimensions_in": [
      36,
      18
     ],
-    "element": "duct",
-    "properties": {
-     "material": {
-      "value": "galvanized_steel",
-      "origin": "COPIED_FROM_SPEC",
-      "source_id": "2.1.A"
-     }
-    }
+    "element": "duct"
    },
+   "takeoff": {
+    "property": "material",
+    "value": "galvanized_steel"
+   },
+   "drawing": [
+    {
+     "id": "M102-note18",
+     "text": "D-737 THRU D-742: GALV"
+    },
+    {
+     "id": "M102-tag-D-727",
+     "text": "D-727: 36x18 RA"
+    }
+   ],
    "evidence": [
     {
      "id": "2.1.A",
@@ -211,7 +237,7 @@
    ],
    "policy": {
     "id": "POLICY-1",
-    "text": "Review only the requested property, using only the supplied evidence. A value that was not read from the drawing does not establish what the drawing shows."
+    "text": "Review only the requested property, using only the supplied evidence. A value that was not read from the drawing does not establish what the drawing shows. FAR 52.236-21 applies: anything mentioned in the specifications and not shown on the drawings is of like effect as if shown in both, so where the drawing is silent the specification still applies and the value is recorded as specification-derived. Only a difference between the drawing and the specification is submitted for a written determination."
    }
   },
   "target": {
@@ -225,7 +251,7 @@
    "missing_evidence": [
     "INFERRED_VALUE_ONLY"
    ],
-   "action": "REQUEST_MISSING_DETAIL",
+   "action": "FOLLOW_SPEC_RECORD_AS_SPEC_DERIVED",
    "reason": "The only value available was not read from the drawing, so it cannot show that the drawing complies."
   },
   "meta": {
@@ -240,23 +266,33 @@
   "panel": "transfer",
   "input": {
    "question": "Does D-740's material meet the supplied requirement?",
-   "object": {
+   "duct": {
     "id": "D-740",
     "system": "general_exhaust",
     "dimensions_in": [
      14,
      10
     ],
-    "element": "duct",
-    "properties": {
-     "material": {
-      "value": "galvanized_steel",
-      "origin": "DRAWING_ANNOTATION",
-      "source_id": "M201-note3",
-      "source_text": "D-740: 14x10"
-     }
-    }
+    "element": "duct"
    },
+   "takeoff": {
+    "property": "material",
+    "value": "galvanized_steel"
+   },
+   "drawing": [
+    {
+     "id": "M201-tag-D-740",
+     "text": "D-740: 14x10 EA"
+    },
+    {
+     "id": "M201-note3",
+     "text": "ALL GENERAL EXHAUST DUCTS: GALV U.N.O."
+    },
+    {
+     "id": "M201-note13",
+     "text": "D-750 THRU D-755: SST304"
+    }
+   ],
    "evidence": [
     {
      "id": "2.1.A",
@@ -270,7 +306,7 @@
    ],
    "policy": {
     "id": "POLICY-1",
-    "text": "Review only the requested property, using only the supplied evidence. A value that was not read from the drawing does not establish what the drawing shows."
+    "text": "Review only the requested property, using only the supplied evidence. A value that was not read from the drawing does not establish what the drawing shows. FAR 52.236-21 applies: anything mentioned in the specifications and not shown on the drawings is of like effect as if shown in both, so where the drawing is silent the specification still applies and the value is recorded as specification-derived. Only a difference between the drawing and the specification is submitted for a written determination."
    }
   },
   "target": {
@@ -299,22 +335,29 @@
   "panel": "transfer",
   "input": {
    "question": "Does D-747's material meet the supplied requirement?",
-   "object": {
+   "duct": {
     "id": "D-747",
     "system": "general_exhaust",
     "dimensions_in": [
      14,
      10
     ],
-    "element": "duct",
-    "properties": {
-     "material": {
-      "value": "galvanized_steel",
-      "origin": "COPIED_FROM_SPEC",
-      "source_id": "2.1.A"
-     }
-    }
+    "element": "duct"
    },
+   "takeoff": {
+    "property": "material",
+    "value": "galvanized_steel"
+   },
+   "drawing": [
+    {
+     "id": "M201-tag-D-754",
+     "text": "D-754: 14x10 GALV EA"
+    },
+    {
+     "id": "M201-tag-D-747",
+     "text": "D-747: 14x10 EA"
+    }
+   ],
    "evidence": [
     {
      "id": "2.1.A",
@@ -328,7 +371,7 @@
    ],
    "policy": {
     "id": "POLICY-1",
-    "text": "Review only the requested property, using only the supplied evidence. A value that was not read from the drawing does not establish what the drawing shows."
+    "text": "Review only the requested property, using only the supplied evidence. A value that was not read from the drawing does not establish what the drawing shows. FAR 52.236-21 applies: anything mentioned in the specifications and not shown on the drawings is of like effect as if shown in both, so where the drawing is silent the specification still applies and the value is recorded as specification-derived. Only a difference between the drawing and the specification is submitted for a written determination."
    }
   },
   "target": {
@@ -342,7 +385,7 @@
    "missing_evidence": [
     "INFERRED_VALUE_ONLY"
    ],
-   "action": "REQUEST_MISSING_DETAIL",
+   "action": "FOLLOW_SPEC_RECORD_AS_SPEC_DERIVED",
    "reason": "The only value available was not read from the drawing, so it cannot show that the drawing complies."
   },
   "meta": {

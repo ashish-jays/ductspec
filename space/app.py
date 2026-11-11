@@ -83,13 +83,13 @@ with gr.Blocks(title="DuctSpec") as demo:
     gr.Markdown(
         "# DuctSpec\n"
         "### Can a 3.35B model refuse to certify compliance it cannot see?\n\n"
-        "Each packet is one duct, one property, and the specification clauses supplied "
-        "to the reviewer. Every property says where its value came from. Only "
-        "`DRAWING_ANNOTATION` and `DRAWING_SCHEDULE` are evidence of what the drawing "
-        "shows — `COPIED_FROM_SPEC` and `ENGINEERING_DEFAULT` are gaps somebody filled.\n\n"
-        "**Try this.** Run the first example. Then change its `origin` from "
-        "`DRAWING_ANNOTATION` to `COPIED_FROM_SPEC`, leaving the value alone, and run it "
-        "again. Nothing a reader can see has changed. The answer should."
+        "Each packet is one duct, one property, the takeoff value carried for it, the "
+        "lines lettered on the drawing, and the specification clauses supplied to the "
+        "reviewer. Nothing says where the takeoff value came from. The drawing lines "
+        "are the only evidence of what the drawing shows.\n\n"
+        "**Try this.** Run the first example. Then delete the value from the drawing "
+        "line that carries it, leaving the takeoff value alone, and run it again. The "
+        "number being checked has not changed. The answer should."
     )
     with gr.Row():
         with gr.Column():

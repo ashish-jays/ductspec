@@ -22,26 +22,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from ductspec.derive import Packet  # noqa: E402,F401  (kept for context)
 from ductspec.parsing import parse_prediction  # noqa: E402
+from ductspec.prompt import render  # noqa: E402
 from ductspec.scoring import score_one  # noqa: E402
 
 MODEL = "CohereLabs/tiny-aya-global"
 ROOT = Path(__file__).resolve().parents[1]
-
-INSTRUCTION = """You are reviewing one property of one duct against the supplied specification clauses.
-
-Answer with JSON only, in exactly this shape:
-{"verdict": "COMPLIANT" | "NON_COMPLIANT" | "INSUFFICIENT_EVIDENCE",
- "governing_ids": [clause ids that govern],
- "observation_ids": [ids of what the drawing shows],
- "missing_evidence": [reason codes, only when abstaining],
- "action": "NONE_FOR_THIS_CHECK" | "RFI_DRAWING_SPEC_DISCREPANCY" | "REQUEST_MISSING_DETAIL" | "REQUEST_APPLICABILITY_CLARIFICATION"}
-
-Reason codes: MISSING_OBSERVATION, INFERRED_VALUE_ONLY, MISSING_AUTHORITY, APPLICABILITY_UNKNOWN, UNRESOLVED_CONFLICT, AMBIGUOUS_ASSOCIATION.
-
-A value that was not read from the drawing does not establish what the drawing shows.
-
-PACKET:
-"""
 
 
 def main(n: int = 3) -> None:
@@ -57,7 +42,7 @@ def main(n: int = 3) -> None:
 
     parsed = 0
     for row in rows:
-        prompt = INSTRUCTION + json.dumps(row["input"], indent=1)
+        prompt = render(row["input"])
         ids = tok.apply_chat_template(
             [{"role": "user", "content": prompt}],
             tokenize=True, add_generation_prompt=True, return_tensors="pt",
