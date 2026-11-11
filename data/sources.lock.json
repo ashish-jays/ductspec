@@ -39,14 +39,6 @@
     "title": "HVAC Air Distribution",
     "url": "https://www.wbdg.org/FFC/DOD/UFGS/UFGS%2023%2030%2000.pdf"
   },
-  "UFGS-23-31-13.00-40": {
-    "bytes": 158891,
-    "convention": "ufgs",
-    "sha256": "5ac140f252ed5cd011f53c7c9b32b9efa292d94753c5489c7300ffe8ce9d3989",
-    "split": "train",
-    "title": "Metal Ducts (NASA)",
-    "url": "https://www.wbdg.org/FFC/NASA/UFGS/UFGS%2023%2031%2013.00%2040.pdf"
-  },
   "VA-23-07-11": {
     "bytes": 104953,
     "convention": "va",

@@ -37,10 +37,12 @@ sources:
     title: Plumbing, General Purpose
     url: https://www.wbdg.org/FFC/DOD/UFGS/22%2000%2000.pdf
     split: train
-  - id: UFGS-23-31-13.00-40
-    title: Metal Ducts (NASA)
-    url: https://www.wbdg.org/FFC/NASA/UFGS/UFGS%2023%2031%2013.00%2040.pdf
-    split: train
+  # Dropped. This section publishes no table of contents, so its headings
+  # cannot be validated against the document's own list, and its text layer
+  # splits words ("Shop fabricate d ucts"). Quotes taken from it would not
+  # survive the quote-fidelity gate, and a requirement whose quote cannot be
+  # checked against the page is exactly what this project refuses to ship.
+  # It contributed 6 of 158 candidates.
 
   # Held out: a different authority, different wording, different editing marks.
   - id: VA-23-31-00

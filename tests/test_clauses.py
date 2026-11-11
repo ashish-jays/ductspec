@@ -243,3 +243,23 @@ def test_table_figures_do_not_become_clauses():
     # shape of the numbering instead, and a thickness value of 3.5 pushed the
     # counter past the genuine 3.3 and 3.4, silently dropping them.
     assert {"2.4.5", "3.3", "3.4"} <= set(ids)
+
+
+@pytest.mark.skipif(not (SOURCES / "UFGS-23-30-00.pdf").exists(), reason="run ductspec.sources first")
+def test_long_headings_do_not_leak_into_the_clause_body():
+    """A heading that wraps leaves its tail at the top of the body, so a quote
+    taken from that clause carries a fragment of its own title. UFGS 2.12.11.1
+    came out titled "Systems with total pressure " with the rest in the text.
+    """
+    from ductspec.clauses import _normalise, toc_entries
+    from pypdf import PdfReader
+
+    pdf = SOURCES / "UFGS-23-30-00.pdf"
+    text = "\n".join(p.extract_text() or "" for p in PdfReader(pdf).pages)
+    listed = toc_entries(text)
+    clauses = parse_clauses(pdf, "UFGS-23-30-00")
+
+    for clause in clauses:
+        full = listed.get(clause.clause_id)
+        if full:
+            assert len(_normalise(clause.title)) >= len(_normalise(full)) - 2, clause.clause_id
