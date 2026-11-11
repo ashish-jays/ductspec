@@ -89,6 +89,27 @@ def strip_designer_notes(text: str, convention: Convention = UFGS) -> str:
     return "\n".join(out)
 
 
+def toc_entries(text: str) -> dict[str, str]:
+    """Clause ids the document lists in its own table of contents.
+
+    This is the most reliable statement of what the clauses are, because the
+    document makes it itself. It gives both the id and the title, and a body
+    heading has to match both: a table value of "3.5" under a column headed
+    "90" shares an id with a real clause but not its name.
+    """
+    start = text.find("TABLE OF CONTENTS")
+    if start == -1:
+        return {}
+    body = list(re.finditer(r"^PART\s+1\s*[-\u2013]?\s*GENERAL\s*$", text, re.M))
+    end = body[-1].start() if len(body) > 1 else len(text)
+    found = re.findall(r"^\s*(\d+\.\d+(?:\.\d+)*)\s+(\S.*?)\s*$", text[start:end], re.M)
+    return {cid: _normalise(title) for cid, title in found}
+
+
+def _normalise(title: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "", title.lower())
+
+
 def _body_only(text: str) -> str:
     """Skip the cover page and table of contents.
 
@@ -142,6 +163,7 @@ def parse_clauses(pdf_path: Path, source_id: str, convention: Convention = UFGS)
     reader = PdfReader(pdf_path)
     pages = _page_index(reader)
     clause_inline = re.compile(rf"^(\d+\.\d+(?:\.\d+)*){convention.heading_gap}(\S.*)$")
+    toc = toc_entries("\n".join(t for _, t in pages))
 
     full = "\n".join(t for _, t in pages)
     body = _body_only(strip_designer_notes(full, convention))
@@ -162,20 +184,36 @@ def parse_clauses(pdf_path: Path, source_id: str, convention: Convention = UFGS)
     pending: tuple[str, str] | None = None   # (clause_id, title)
     buffer: list[str] = []
 
-    def is_real_heading(clause_id: str) -> bool:
+    def is_real_heading(clause_id: str, title: str) -> bool:
         """Reject numbers that are table data rather than clause headings.
 
         These specifications are full of figures that look like clause ids —
         "0.235", "401.5", "61.552" — and a run of them inside an insulation
         thickness table was producing clauses numbered after gauge values, with
-        ids that collide with real ones. A citation to a fabricated clause is
-        the worst thing this dataset could contain, so headings are checked
-        against the document's own structure rather than their shape: a clause
-        number belongs to the PART it sits in, and numbering runs forward.
+        ids colliding with real ones. A citation to a clause that does not
+        exist is the worst thing this dataset could contain.
+
+        Where the document lists its own clauses, that list decides. An earlier
+        attempt used the shape of the numbering instead — same PART, running
+        forward — which removed the fabrications but also suppressed real
+        clauses sitting after a table: a thickness value of "3.5" pushed the
+        counter past the genuine 3.3 and 3.4. The document's own table of
+        contents has no such failure mode.
         """
-        parts = clause_id.split(".")
+        if toc:
+            expected = toc.get(clause_id)
+            if expected is None:
+                return False
+            actual = _normalise(title)
+            if not actual:
+                return False
+            # A long body heading wraps across lines, so the body may carry
+            # only the first words ("Pre Manufactured" for "Pre Manufactured
+            # Double Wall Ductwork"). Either may be the prefix of the other.
+            n = min(len(actual), len(expected), 12)
+            return actual[:n] == expected[:n]
         try:
-            number = tuple(int(x) for x in parts)
+            number = tuple(int(x) for x in clause_id.split("."))
         except ValueError:
             return False
         return number[0] == current_part_no and number > last_number
@@ -226,7 +264,7 @@ def parse_clauses(pdf_path: Path, source_id: str, convention: Convention = UFGS)
                 heading = (m.group(1), nxt)
                 i += 1
 
-        if heading and not is_real_heading(heading[0]):
+        if heading and not is_real_heading(heading[0], heading[1]):
             heading = None   # a table figure, not a clause
 
         if heading:

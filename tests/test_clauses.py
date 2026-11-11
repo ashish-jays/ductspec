@@ -230,10 +230,15 @@ def test_table_figures_do_not_become_clauses():
         head = int(cid.split(".")[0])
         assert head in (1, 2, 3), f"{cid} is outside the document's PART numbering"
 
-    # Numbering runs forward within each PART.
-    for part in (1, 2, 3):
-        numbers = [tuple(int(x) for x in c.split(".")) for c in ids if c.startswith(f"{part}.")]
-        assert numbers == sorted(numbers), f"PART {part} numbering is out of order"
+    # Every heading must be one the document lists in its own contents.
+    from ductspec.clauses import toc_entries
+    from pypdf import PdfReader
+    text = "\n".join(pg.extract_text() or "" for pg in PdfReader(SOURCES / "UFGS-23-07-00.pdf").pages)
+    listed = toc_entries(text)
+    assert listed, "this section publishes a table of contents"
+    assert set(ids) <= set(listed), f"not in contents: {set(ids) - set(listed)}"
 
-    # The requirement we actually cite survived the filter.
-    assert "2.4.5" in ids
+    # Clauses that sit AFTER a table must survive. An earlier filter used the
+    # shape of the numbering instead, and a thickness value of 3.5 pushed the
+    # counter past the genuine 3.3 and 3.4, silently dropping them.
+    assert {"2.4.5", "3.3", "3.4"} <= set(ids)
