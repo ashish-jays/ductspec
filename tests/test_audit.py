@@ -72,3 +72,21 @@ def test_the_abstention_reason_metric_only_scores_abstentions(rows):
     assert "abstention_reason_accuracy" in result.headline
     abstentions = sum(1 for r in rows if r["target"]["verdict"] == "INSUFFICIENT_EVIDENCE")
     assert 0 < abstentions < len(rows)
+
+
+def test_the_sample_input_is_the_prompt_the_model_sees(rows):
+    """A Sample whose input is not the rendered prompt cannot be matched back
+    to a saved generation, and an oracle replaying its own answers scores
+    zero — which is what happened before this test existed."""
+    from ductspec.prompt import render
+
+    samples = to_samples(rows)
+    assert samples[0].input == render(rows[0]["input"])
+
+    by_prompt = {render(r["input"]): r for r in rows}
+    replayed = ak.evaluate(
+        samples,
+        model=lambda ps: [json.dumps(by_prompt[p]["target"]) for p in ps],
+        scorers=scorers(),
+    )
+    assert replayed.headline["strict_accuracy"] == 1.0

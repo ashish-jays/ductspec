@@ -29,6 +29,7 @@ from auditkit.score import Score
 from auditkit.types import Direction, ScoreKind
 
 from .parsing import parse_prediction
+from .prompt import render
 from .scoring import score_one
 
 VERSION = "1.0.0"
@@ -37,13 +38,17 @@ VERSION = "1.0.0"
 def to_samples(rows: list[dict]) -> list[ak.Sample]:
     """One record becomes one Sample.
 
+    `input` is the rendered prompt, exactly what the model is shown. Anything
+    else and a replayed generation cannot be matched back to the sample that
+    produced it — which is how an oracle ends up scoring zero.
+
     The gold target travels in `metadata`, not in `target`: our answer is a
     structure, and the scorers need the whole of it — the citations, the
     observation, the reason code and the action — not a string to match.
     """
     return [
         ak.Sample(
-            input=json.dumps(row["input"], indent=1),
+            input=render(row["input"]),
             id=row["id"],
             task="ductspec-conformance",
             metadata={
