@@ -103,7 +103,7 @@ def toc_entries(text: str) -> dict[str, str]:
     body = list(re.finditer(r"^PART\s+1\s*[-\u2013]?\s*GENERAL\s*$", text, re.M))
     end = body[-1].start() if len(body) > 1 else len(text)
     found = re.findall(r"^\s*(\d+\.\d+(?:\.\d+)*)\s+(\S.*?)\s*$", text[start:end], re.M)
-    return {cid: _normalise(title) for cid, title in found}
+    return {cid: title.strip() for cid, title in found}
 
 
 def _normalise(title: str) -> str:
@@ -201,9 +201,10 @@ def parse_clauses(pdf_path: Path, source_id: str, convention: Convention = UFGS)
         contents has no such failure mode.
         """
         if toc:
-            expected = toc.get(clause_id)
-            if expected is None:
+            raw = toc.get(clause_id)
+            if raw is None:
                 return False
+            expected = _normalise(raw)
             actual = _normalise(title)
             if not actual:
                 return False
@@ -223,6 +224,26 @@ def parse_clauses(pdf_path: Path, source_id: str, convention: Convention = UFGS)
             return
         cid, title = pending
         text = "\n".join(buffer).strip()
+
+        # A long heading wraps, and the parser takes only its first line. The
+        # rest then sits at the top of the body, so clause 2.2.2 of the NASA
+        # metal-ducts section came out titled "Round, High-Pres" with a body
+        # beginning "sure, Double-Wall Sheet Metal Duct". A quote taken from
+        # that body would carry a fragment of its own heading.
+        #
+        # Where the document lists the full title, use it, and remove whatever
+        # part of it leaked into the body.
+        full = toc.get(cid)
+        if full and _normalise(full).startswith(_normalise(title)) and _normalise(full) != _normalise(title):
+            leaked = len(_normalise(full)) - len(_normalise(title))
+            kept, seen = [], 0
+            for ch in text:
+                if seen >= leaked:
+                    kept.append(ch)
+                elif ch.isalnum():
+                    seen += 1
+            text = "".join(kept).lstrip(" ,.;:-\n")
+            title = full
         if not text:
             return
         reasons = _why_not_operative(text, convention)
