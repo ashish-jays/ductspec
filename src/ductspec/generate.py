@@ -223,9 +223,14 @@ def family_for(req: Requirement, n: int, sources: tuple[str, ...], ctx=None) -> 
     return out
 
 
-def build(seed: int = 20261111) -> dict[str, list[dict]]:
+def build(seed: int = 20261111, requirements: list[Requirement] | None = None) -> dict[str, list[dict]]:
+    """Build the splits from a requirement set.
+
+    The arms differ only here. Same generator, same seed, same situations per
+    requirement — what changes is which requirements were considered sound.
+    """
     rng = random.Random(seed)
-    requirements = load()
+    requirements = requirements if requirements is not None else load()
 
     # One authoritative clause per element, used as an inapplicable distractor
     # in other families.
@@ -272,11 +277,13 @@ def build(seed: int = 20261111) -> dict[str, list[dict]]:
             rid = f"{req.id}-{ctx['sheet']}-{i:02d}"
             splits[split].append(_record(rid, scenario.family, scenario, split, panel))
           n += 20
-    # Allocate the training-authority families across splits deterministically,
-    # so the proportions do not swing on a seed with only a few dozen families.
-    rng.shuffle(families)
-    for idx, (scenarios, panel, req, ctx) in enumerate(families):
-        split = "train" if idx % 7 < 5 else ("dev" if idx % 7 == 5 else "test")
+    # A family's split is decided by its own name, not by its position in the
+    # list. Which requirements are present changes the length of this list, and
+    # an ablation where a family lands in train for one arm and dev for the
+    # other is measuring the shuffle, not the curation.
+    for scenarios, panel, req, ctx in families:
+        bucket = int(hashlib.sha256(f"{seed}:{scenarios[0].family}".encode()).hexdigest(), 16) % 7
+        split = "train" if bucket < 5 else ("dev" if bucket == 5 else "test")
         for i, scenario in enumerate(scenarios):
             rid = f"{req.id}-{ctx['sheet']}-{i:02d}"
             splits[split].append(_record(rid, scenario.family, scenario, split, panel))
@@ -291,6 +298,51 @@ def write(splits: dict[str, list[dict]]) -> None:
         path.write_text("".join(json.dumps(r) + "\n" for r in rows))
         digest = hashlib.sha256(path.read_bytes()).hexdigest()[:12]
         print(f"{split:6} {len(rows):4} records  sha256:{digest}  -> {path.relative_to(ROOT)}")
+
+
+def build_arms(seed: int = 20261111) -> dict[str, dict[str, list[dict]]]:
+    """The two training arms, and the shared evaluation set.
+
+    Both arms train on data generated from their own requirement set. Both are
+    scored on the SAME test set, built from the audited requirements — the
+    evaluation cannot depend on which arm is being judged, or the comparison
+    measures nothing.
+    """
+    from .curate import CURATED_GATES, RAW_GATES, curate
+
+    raw_reqs, _ = curate(load(ROOT / "data" / "requirements.raw.yaml"), RAW_GATES)
+    cur_reqs, _ = curate(load(ROOT / "data" / "requirements.raw.yaml"), CURATED_GATES)
+    audited = load()
+
+    shared = build(requirements=audited)
+    raw_train = build(requirements=raw_reqs)["train"]
+    cur_train = build(requirements=cur_reqs)["train"]
+
+    # Match the arms on size. The raw set contains more requirements, so it
+    # generates more records, and an adapter trained on more tokens would look
+    # better or worse for a reason that has nothing to do with curation. Both
+    # arms are truncated to the smaller count, deterministically, after a
+    # shuffle seeded identically — so the difference between them is which
+    # requirements were considered sound, and nothing else.
+    n = min(len(raw_train), len(cur_train))
+    for rows in (raw_train, cur_train):
+        random.Random(seed).shuffle(rows)
+
+    return {
+        "raw": {"train": raw_train[:n], "dev": shared["dev"], "test": shared["test"]},
+        "curated": {"train": cur_train[:n], "dev": shared["dev"], "test": shared["test"]},
+    }
+
+
+def write_arms(arms: dict[str, dict[str, list[dict]]]) -> None:
+    for arm, splits in arms.items():
+        out = OUT / arm
+        out.mkdir(parents=True, exist_ok=True)
+        for split, rows in splits.items():
+            path = out / f"{split}.jsonl"
+            path.write_text("".join(json.dumps(r) + "\n" for r in rows))
+            digest = hashlib.sha256(path.read_bytes()).hexdigest()[:12]
+            print(f"{arm:8} {split:6} {len(rows):4} records  sha256:{digest}")
 
 
 if __name__ == "__main__":
