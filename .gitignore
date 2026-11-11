@@ -5,3 +5,4 @@ data/sources/*.pdf
 data/build/
 .env
 .DS_Store
+.worktrees/
