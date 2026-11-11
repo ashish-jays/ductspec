@@ -36,7 +36,8 @@ def test_every_metric_declares_which_way_is_better():
 
 
 def test_the_oracle_scores_perfectly(rows):
-    by_prompt = {json.dumps(r["input"], indent=1): r for r in rows}
+    from ductspec.prompt import render
+    by_prompt = {render(r["input"]): r for r in rows}
     out = _scores(rows, lambda ps: [json.dumps(by_prompt[p]["target"]) for p in ps])
 
     assert out["strict_accuracy"] == 1.0
