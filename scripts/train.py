@@ -56,7 +56,9 @@ HYPERPARAMETERS = dict(
                          "gate_proj", "up_proj", "down_proj"],
     assistant_only_loss=True,     # supervise the answer, not the packet
     packing=False,
-    use_gradient_checkpointing=True,
+    # gradient_checkpointing is the trainer argument; use_gradient_checkpointing
+    # sets a separate model-config field and does not enable it.
+    gradient_checkpointing=True,
     gradient_checkpointing_kwargs={"use_reentrant": False},
     attn_implementation="sdpa",
     seed=42,

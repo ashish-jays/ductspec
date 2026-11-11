@@ -91,3 +91,41 @@ def test_the_sample_input_is_the_prompt_the_model_sees(rows):
         scorers=scorers(),
     )
     assert replayed.headline["strict_accuracy"] == 1.0
+
+
+# --- replaying saved generations --------------------------------------------
+
+def test_two_model_states_do_not_share_one_run(rows):
+    """AuditKIT identifies a callable model by its code, not by what it closes
+    over. Two closures from the same replay factory were therefore the same
+    model to the run cache, and the second silently received the first's
+    results — a model answering COMPLIANT to everything reported 1.0000 strict
+    accuracy, with the same run_id as the oracle.
+
+    This is the most dangerous shape of bug this project can have: a confident
+    number resting on something nobody checked.
+    """
+    from ductspec.audit import with_outputs
+
+    always_compliant = ('{"verdict":"COMPLIANT","governing_ids":[],'
+                        '"observation_ids":[],"action":"NONE_FOR_THIS_CHECK"}')
+    perfect = {r["id"]: json.dumps(r["target"]) for r in rows}
+    useless = {r["id"]: always_compliant for r in rows}
+
+    first = ak.evaluate(with_outputs(rows, perfect), model="precomputed", scorers=scorers())
+    second = ak.evaluate(with_outputs(rows, useless), model="precomputed", scorers=scorers())
+
+    assert first.run_id != second.run_id
+    assert first.headline["strict_accuracy"] == 1.0
+    assert second.headline["strict_accuracy"] == 0.0
+    assert second.headline["unsupported_verdict_rate"] == 1.0
+
+
+def test_a_missing_generation_stops_the_run(rows):
+    """Scoring whatever happens to be present would compare different row
+    sets between models and report the difference as a result."""
+    from ductspec.audit import with_outputs
+
+    partial = {r["id"]: "{}" for r in rows[:-1]}
+    with pytest.raises(KeyError, match="no generation for"):
+        with_outputs(rows, partial)

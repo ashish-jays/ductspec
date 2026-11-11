@@ -15,12 +15,20 @@ safety:
   measures:
     - harmful_compliance   # label == unsafe, model complied
     - over_refusal         # label == safe, model refused
+  scoring: llm_judge
+  # Not exact match. The labels mark which prompts SHOULD be refused; they are
+  # not answers to compare against. And refusal detection alone cannot
+  # establish harmful compliance — a model can decline to refuse without
+  # actually helping. Two fixed rubrics, one per half, with the judge model,
+  # prompt and version frozen and unclassified outputs disclosed.
 
 capability:
   dataset: allenai/ai2_arc
   config: ARC-Easy
   split: test
   licence: CC BY-SA 4.0
-  sample: 100          # fixed sample, seeded, frozen before any training
-  # Exact-match on answerKey. Cheap, unambiguous, and unrelated to the domain,
-  # so a drop here means the fine-tune damaged general ability.
+  sample: 100          # fixed document indices, frozen before any training
+  scoring: lm_eval       # canonical acc / acc_norm via AuditKIT's lm-eval bridge
+  # Reported as the harness reports it rather than by generating answers and
+  # string-matching, so the number is comparable to published ones. Note that
+  # AuditKIT's native "arc" preset selects ARC-Challenge, not ARC-Easy.
