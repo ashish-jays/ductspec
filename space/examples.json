@@ -1,0 +1,353 @@
+[
+ {
+  "id": "R-VA-2.1.A-material-M101-00",
+  "family": "F-R-VA-2.1.A-material-M101",
+  "split": "test",
+  "panel": "transfer",
+  "input": {
+   "question": "Does D-700's material meet the supplied requirement?",
+   "object": {
+    "id": "D-700",
+    "system": "supply_air",
+    "dimensions_in": [
+     20,
+     12
+    ],
+    "element": "duct",
+    "properties": {
+     "material": {
+      "value": "galvanized_steel",
+      "origin": "DRAWING_ANNOTATION",
+      "source_id": "M101-note8",
+      "source_text": "D-700: 20x12"
+     }
+    }
+   },
+   "evidence": [
+    {
+     "id": "2.1.A",
+     "source": "VA-23-31-00",
+     "page": 7,
+     "text": "construct ducts and accessories of galvanized sheet steel, ASTM A653/A653M, coating G90; or, aluminum sheet, ASTM B209, alloy 1100, 3003, or 5052."
+    }
+   ],
+   "documents_supplied": [
+    "VA-23-31-00"
+   ],
+   "policy": {
+    "id": "POLICY-1",
+    "text": "Review only the requested property, using only the supplied evidence. A value that was not read from the drawing does not establish what the drawing shows."
+   }
+  },
+  "target": {
+   "verdict": "COMPLIANT",
+   "scope": "material",
+   "governing_ids": [
+    "2.1.A"
+   ],
+   "observation_ids": [
+    "M101-note8"
+   ],
+   "failed_ids": [],
+   "missing_evidence": [],
+   "action": "NONE_FOR_THIS_CHECK",
+   "reason": "The value shown on the drawing satisfies clause 2.1.A."
+  },
+  "meta": {
+   "answer_available": true,
+   "requirement": "R-VA-2.1.A-material"
+  }
+ },
+ {
+  "id": "R-VA-2.1.A-material-M101-07",
+  "family": "F-R-VA-2.1.A-material-M101",
+  "split": "test",
+  "panel": "transfer",
+  "input": {
+   "question": "Does D-707's material meet the supplied requirement?",
+   "object": {
+    "id": "D-707",
+    "system": "supply_air",
+    "dimensions_in": [
+     20,
+     12
+    ],
+    "element": "duct",
+    "properties": {
+     "material": {
+      "value": "galvanized_steel",
+      "origin": "COPIED_FROM_SPEC",
+      "source_id": "2.1.A"
+     }
+    }
+   },
+   "evidence": [
+    {
+     "id": "2.1.A",
+     "source": "VA-23-31-00",
+     "page": 7,
+     "text": "construct ducts and accessories of galvanized sheet steel, ASTM A653/A653M, coating G90; or, aluminum sheet, ASTM B209, alloy 1100, 3003, or 5052."
+    }
+   ],
+   "documents_supplied": [
+    "VA-23-31-00"
+   ],
+   "policy": {
+    "id": "POLICY-1",
+    "text": "Review only the requested property, using only the supplied evidence. A value that was not read from the drawing does not establish what the drawing shows."
+   }
+  },
+  "target": {
+   "verdict": "INSUFFICIENT_EVIDENCE",
+   "scope": "material",
+   "governing_ids": [
+    "2.1.A"
+   ],
+   "observation_ids": [],
+   "failed_ids": [],
+   "missing_evidence": [
+    "INFERRED_VALUE_ONLY"
+   ],
+   "action": "REQUEST_MISSING_DETAIL",
+   "reason": "The only value available was not read from the drawing, so it cannot show that the drawing complies."
+  },
+  "meta": {
+   "answer_available": false,
+   "requirement": "R-VA-2.1.A-material"
+  }
+ },
+ {
+  "id": "R-VA-2.1.A-material-M102-00",
+  "family": "F-R-VA-2.1.A-material-M102",
+  "split": "test",
+  "panel": "transfer",
+  "input": {
+   "question": "Does D-720's material meet the supplied requirement?",
+   "object": {
+    "id": "D-720",
+    "system": "return_air",
+    "dimensions_in": [
+     36,
+     18
+    ],
+    "element": "duct",
+    "properties": {
+     "material": {
+      "value": "galvanized_steel",
+      "origin": "DRAWING_ANNOTATION",
+      "source_id": "M102-note1",
+      "source_text": "D-720: 36x18"
+     }
+    }
+   },
+   "evidence": [
+    {
+     "id": "2.1.A",
+     "source": "VA-23-31-00",
+     "page": 7,
+     "text": "construct ducts and accessories of galvanized sheet steel, ASTM A653/A653M, coating G90; or, aluminum sheet, ASTM B209, alloy 1100, 3003, or 5052."
+    }
+   ],
+   "documents_supplied": [
+    "VA-23-31-00"
+   ],
+   "policy": {
+    "id": "POLICY-1",
+    "text": "Review only the requested property, using only the supplied evidence. A value that was not read from the drawing does not establish what the drawing shows."
+   }
+  },
+  "target": {
+   "verdict": "COMPLIANT",
+   "scope": "material",
+   "governing_ids": [
+    "2.1.A"
+   ],
+   "observation_ids": [
+    "M102-note1"
+   ],
+   "failed_ids": [],
+   "missing_evidence": [],
+   "action": "NONE_FOR_THIS_CHECK",
+   "reason": "The value shown on the drawing satisfies clause 2.1.A."
+  },
+  "meta": {
+   "answer_available": true,
+   "requirement": "R-VA-2.1.A-material"
+  }
+ },
+ {
+  "id": "R-VA-2.1.A-material-M102-07",
+  "family": "F-R-VA-2.1.A-material-M102",
+  "split": "test",
+  "panel": "transfer",
+  "input": {
+   "question": "Does D-727's material meet the supplied requirement?",
+   "object": {
+    "id": "D-727",
+    "system": "return_air",
+    "dimensions_in": [
+     36,
+     18
+    ],
+    "element": "duct",
+    "properties": {
+     "material": {
+      "value": "galvanized_steel",
+      "origin": "COPIED_FROM_SPEC",
+      "source_id": "2.1.A"
+     }
+    }
+   },
+   "evidence": [
+    {
+     "id": "2.1.A",
+     "source": "VA-23-31-00",
+     "page": 7,
+     "text": "construct ducts and accessories of galvanized sheet steel, ASTM A653/A653M, coating G90; or, aluminum sheet, ASTM B209, alloy 1100, 3003, or 5052."
+    }
+   ],
+   "documents_supplied": [
+    "VA-23-31-00"
+   ],
+   "policy": {
+    "id": "POLICY-1",
+    "text": "Review only the requested property, using only the supplied evidence. A value that was not read from the drawing does not establish what the drawing shows."
+   }
+  },
+  "target": {
+   "verdict": "INSUFFICIENT_EVIDENCE",
+   "scope": "material",
+   "governing_ids": [
+    "2.1.A"
+   ],
+   "observation_ids": [],
+   "failed_ids": [],
+   "missing_evidence": [
+    "INFERRED_VALUE_ONLY"
+   ],
+   "action": "REQUEST_MISSING_DETAIL",
+   "reason": "The only value available was not read from the drawing, so it cannot show that the drawing complies."
+  },
+  "meta": {
+   "answer_available": false,
+   "requirement": "R-VA-2.1.A-material"
+  }
+ },
+ {
+  "id": "R-VA-2.1.A-material-M201-00",
+  "family": "F-R-VA-2.1.A-material-M201",
+  "split": "test",
+  "panel": "transfer",
+  "input": {
+   "question": "Does D-740's material meet the supplied requirement?",
+   "object": {
+    "id": "D-740",
+    "system": "general_exhaust",
+    "dimensions_in": [
+     14,
+     10
+    ],
+    "element": "duct",
+    "properties": {
+     "material": {
+      "value": "galvanized_steel",
+      "origin": "DRAWING_ANNOTATION",
+      "source_id": "M201-note3",
+      "source_text": "D-740: 14x10"
+     }
+    }
+   },
+   "evidence": [
+    {
+     "id": "2.1.A",
+     "source": "VA-23-31-00",
+     "page": 7,
+     "text": "construct ducts and accessories of galvanized sheet steel, ASTM A653/A653M, coating G90; or, aluminum sheet, ASTM B209, alloy 1100, 3003, or 5052."
+    }
+   ],
+   "documents_supplied": [
+    "VA-23-31-00"
+   ],
+   "policy": {
+    "id": "POLICY-1",
+    "text": "Review only the requested property, using only the supplied evidence. A value that was not read from the drawing does not establish what the drawing shows."
+   }
+  },
+  "target": {
+   "verdict": "COMPLIANT",
+   "scope": "material",
+   "governing_ids": [
+    "2.1.A"
+   ],
+   "observation_ids": [
+    "M201-note3"
+   ],
+   "failed_ids": [],
+   "missing_evidence": [],
+   "action": "NONE_FOR_THIS_CHECK",
+   "reason": "The value shown on the drawing satisfies clause 2.1.A."
+  },
+  "meta": {
+   "answer_available": true,
+   "requirement": "R-VA-2.1.A-material"
+  }
+ },
+ {
+  "id": "R-VA-2.1.A-material-M201-07",
+  "family": "F-R-VA-2.1.A-material-M201",
+  "split": "test",
+  "panel": "transfer",
+  "input": {
+   "question": "Does D-747's material meet the supplied requirement?",
+   "object": {
+    "id": "D-747",
+    "system": "general_exhaust",
+    "dimensions_in": [
+     14,
+     10
+    ],
+    "element": "duct",
+    "properties": {
+     "material": {
+      "value": "galvanized_steel",
+      "origin": "COPIED_FROM_SPEC",
+      "source_id": "2.1.A"
+     }
+    }
+   },
+   "evidence": [
+    {
+     "id": "2.1.A",
+     "source": "VA-23-31-00",
+     "page": 7,
+     "text": "construct ducts and accessories of galvanized sheet steel, ASTM A653/A653M, coating G90; or, aluminum sheet, ASTM B209, alloy 1100, 3003, or 5052."
+    }
+   ],
+   "documents_supplied": [
+    "VA-23-31-00"
+   ],
+   "policy": {
+    "id": "POLICY-1",
+    "text": "Review only the requested property, using only the supplied evidence. A value that was not read from the drawing does not establish what the drawing shows."
+   }
+  },
+  "target": {
+   "verdict": "INSUFFICIENT_EVIDENCE",
+   "scope": "material",
+   "governing_ids": [
+    "2.1.A"
+   ],
+   "observation_ids": [],
+   "failed_ids": [],
+   "missing_evidence": [
+    "INFERRED_VALUE_ONLY"
+   ],
+   "action": "REQUEST_MISSING_DETAIL",
+   "reason": "The only value available was not read from the drawing, so it cannot show that the drawing complies."
+  },
+  "meta": {
+   "answer_available": false,
+   "requirement": "R-VA-2.1.A-material"
+  }
+ }
+]

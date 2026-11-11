@@ -2,138 +2,154 @@
 
 **Can a 3.35B open-weights model refuse to certify compliance it cannot actually see?**
 
-A construction drawing shows some things and is silent about others. When a
-review pipeline meets a silence — a duct with no insulation thickness called
-out — the convenient thing to do is fill the gap from the specification, or
-from an engineering default, and carry on. If that filled-in value is later
-checked *against the specification it was copied from*, the check passes. It
-has proved nothing. The model has confirmed its own assumption and returned a
-verdict that looks like evidence.
+*Lexsi AI Safety & Alignment Hackathon — Track 1, problem statements “Domain assistants for regulated industries” and “Grounded answers and fewer hallucinations.”*
 
-DuctSpec trains [Tiny Aya Global](https://huggingface.co/CohereLabs/tiny-aya-global)
-(3.35B) to tell the difference between a value the drawing **shows**, a value a
-requirement **demands**, and a value somebody **inferred** — and to abstain,
-with a reason and a follow-up action, when only the last two exist.
+---
 
-> **Thesis.** Provenance-curated fine-tuning reduces unsupported conformance
-> verdicts — especially where specification-derived or default-filled values
-> masquerade as drawing evidence — without sacrificing answerable coverage.
+## The failure
 
-**Track 1 — Fine-tuning and Data Curation.** Problem statements **#1 Domain
-assistants for regulated industries** and **#3 Grounded answers and fewer
-hallucinations**, addressed as one task: in construction, the governing
-documents are mandatory, so a correct answer must say *which* authority governs,
-*where it is written*, and when the documents do not settle the question.
+A construction drawing shows some things and is silent about others. When a review pipeline meets a silence — a duct with no insulation thickness called out — the convenient move is to fill the gap from the specification, or from an engineering default, and carry on.
 
-## Why this is a regulated domain, not generic document QA
+If that filled-in value is later checked **against the specification it was copied from**, the check passes. It has proved nothing. The model has confirmed its own assumption and returned a verdict that looks like evidence.
 
-Three things make a conformance verdict different from a retrieval answer:
+```
+duct        D-303 · supply air · 600 × 350
+callout     "D-303: 600 x 350 SA"
+insulation  25 mm          ← COPIED_FROM_SPEC
+verdict     COMPLIANT      ← wrong
+```
 
-1. **Applicability is a question in its own right.** A clause about kitchen
-   exhaust does not govern a supply duct. The model must decide whether the
-   requirement reaches this object before it compares any values.
-2. **Authority is supplied, not assumed.** We do *not* train a fixed
-   `code > standard > specification > drawing` ladder: which document governs
-   depends on jurisdiction, adopted edition, incorporation by reference, and a
-   project specification routinely imposes something stricter than a standard's
-   minimum. The governing policy is supplied as evidence and the model must
-   apply the one it was given.
-3. **Abstention has a name, a format and a recipient.** Where the documents
-   conflict or fall silent, the correct output is not "I don't know" — it is a
-   scoped request for written clarification. [FAR 52.236-21](https://www.acquisition.gov/far/52.236-21)
-   gives specifications precedence over drawings *and* requires discrepancies
-   to be submitted for a written determination. That is the RFI, in federal
-   contract language.
+The drawing never said 25 mm. The specification did. There is no evidence here either way, and the only honest answer is to ask for the insulation detail.
 
-## The four behaviours being trained
+> **Thesis.** Provenance-curated fine-tuning reduces unsupported conformance verdicts — especially where specification-derived or default-filled values masquerade as drawing evidence — without sacrificing answerable coverage.
 
-1. Does this requirement apply to this object?
-2. Which supplied authority governs this question?
-3. Is there **independent** evidence for the property being checked?
-4. Produce a scoped verdict, or state precisely what clarification is needed.
+## Three things that make this unusual
 
-## Corpus
+**1. The labels are computed, not written.** No verdict in this dataset was produced by a model or decided by hand. Each comes out of `derive()`, given a structured requirement and a structured object. A teacher-labelled grounding benchmark inherits the teacher's hallucinations; this one cannot. The single place judgement enters is reading a requirement out of a clause, and each of those carries the exact quote, source, clause id and page it came from, so it can be checked against the document.
 
-[UFGS](https://www.wbdg.org/ffc/dod/unified-facilities-guide-specifications-ufgs)
-— Unified Facilities Guide Specifications, prepared by USACE / NAVFAC / AFCEC /
-NASA. Works of the US federal government, in the public domain, so the whole
-dataset can be published. They are a **public surrogate** for "an organisation's
-own documents"; no proprietary specification is used, quoted or published.
+**2. The holdout is a different authority, not another section.** Training uses UFGS; evaluation holds out VA PG-18-1 entirely. Both are US federal guide specifications for the same trade, but they mark the engineer's unmade choices differently — UFGS writes `[A] [B]`, VA writes `//A// //B//` and says so in its own first note: *“Delete between //   // if not applicable to project.”* A model that learned *don't cite square brackets* fails this holdout. A model that learned *a choice nobody has made is not a requirement* transfers.
 
-| Source | Split |
-|---|---|
-| UFGS 23 30 00 — HVAC Air Distribution | train |
-| UFGS 23 07 00 — Thermal Insulation for Mechanical Systems | train |
-| UFGS 23 05 93 — Testing, Adjusting and Balancing for HVAC | train |
-| UFGS 23 08 00 — Commissioning of HVAC Systems | train |
-| UFGS 22 00 00 — Plumbing, General Purpose | train |
-| **UFGS 23 31 13.00 40 — Metal Ducts** | **holdout (whole document)** |
+**3. The project's own parser committed the failure twice, and that is in the repository.** Both times it produced clean-looking output and a fully passing test suite. Only checking against the document itself told them apart — which is exactly what this model is being asked to do. See [the audit trail](#what-went-wrong-and-stayed-in-the-record).
 
-The holdout is a *whole-document* holdout: no clause from it appears in
-training, so the test set measures transfer to an unseen specification rather
-than recall of seen prose. Every PDF is hashed into `data/sources.lock.json` —
-UFGS sections are revised, so "UFGS 23 30 00" alone is not a reproducible
-reference.
+## What the model learns
 
-Two properties of a *guide* specification are handled explicitly, because they
-decide whether a clause is citable at all:
+1. Is there an authority here that settles this question?
+2. Does it reach this object?
+3. Does the drawing **independently** show the property?
+4. Only then: compare.
 
-- **Designer notes are stripped.** UFGS carries instructions to the engineer
-  editing it, bracketed by rules of asterisks and beginning `NOTE:`. They are
-  advice on how to write the spec, not requirements binding on anyone. Citing
-  one as an authority is quoting a comment as law.
-- **Clauses are marked operative or not.** UFGS ships with blanks (`[_____]`)
-  and unresolved alternatives (`[ASME A13.1] [MIL-STD-101]`). Until the designer
-  chooses, there is no requirement to comply with. Only operative clauses are
-  usable as governing evidence; the rest are exactly the right material for
-  `APPLICABILITY_UNKNOWN` cases.
+The order is the design. You cannot ask whether the drawing shows enough before knowing what you are checking against, and you cannot compare a value to a requirement that does not apply.
+
+Where the documents fall silent or conflict, the answer is not “I don't know” — it is a scoped request for written clarification. [FAR 52.236-21](https://www.acquisition.gov/far/52.236-21) gives specifications precedence over drawings *and* requires discrepancies to be submitted for a written determination. That is the RFI, in federal contract language.
+
+We deliberately do **not** train a fixed `code > standard > specification > drawing` ladder. Which document governs depends on jurisdiction, adopted edition and incorporation by reference, and a project specification routinely imposes something stricter than a standard's minimum. The governing policy is supplied as evidence; the model applies the one it was given.
 
 ## Pipeline
 
 ```
-data/sources.yaml ──► ductspec.sources   fetch + sha256 freeze
-                  ──► ductspec.clauses   clause records, notes stripped, operativity marked
-                  ──► CuratorKIT         generate + gate composite evidence packets
-                  ──► AlignTune          two matched QLoRA adapters: raw arm vs curated arm
-                  ──► AuditKIT           base / raw / curated on one frozen test set
+data/sources.yaml ──► ductspec.sources     fetch, sha256-freeze, verify
+                  ──► ductspec.clauses     clause records, per-authority conventions
+                  ──► data/requirements    10 audited requirements, each with its quote
+                  ──► CuratorKIT           gate the extractions, keep rejection lineage
+                  ──► ductspec.derive      compute the verdict — the oracle
+                  ──► ductspec.generate    situations into families, family-level splits
+                  ──► AlignTune            two matched QLoRA adapters
+                  ──► AuditKIT             base / raw / curated on one frozen test set
 ```
 
-The **raw-vs-curated ablation** is the experiment, not decoration: same teacher,
-same example count, same token exposure, differing only in whether grounding and
-provenance gates were applied. Lexsi's own curation study found generator scale
-mattered more than filtration, so "curation helps" is something to demonstrate,
-not assume. A negative result gets published as readily as a positive one.
+Three track repos, each consuming the previous one's artifact.
+
+## The experiment
+
+Two adapters, trained on datasets that differ by **exactly one requirement**.
+
+The raw arm was built from the extraction *before* it was audited, and so includes UFGS 3.2.7.1 — a clause offering the engineer 18 gauge stainless or 16 gauge carbon steel for grease-laden duct, with nobody having chosen yet. Everything else is identical: same generator, same seed, same family-to-split assignment, same test set, and token exposure matched to within 0.3% (prompt 133,724 vs 133,382; supervised 14,856 vs 14,810).
+
+Two confounds had to be removed to get there. The raw set has more requirements and so generated more records, which would have meant one adapter simply saw more tokens. And family-to-split assignment was decided by position in a shuffled list whose length depends on how many requirements are present, so a family could land in train for one arm and dev for the other — the comparison would partly have measured the shuffle.
+
+## Metrics, and why no single one is the headline
+
+An evaluation is worth no more than its resistance to being gamed, and the cheapest way to game a grounding benchmark is to stop answering. These are the three reference behaviours scored on the same 288 rows, **before any training**:
+
+| | oracle | always-compliant | always-abstain |
+|---|---|---|---|
+| strict_accuracy | **1.000** | 0.000 | 0.059 |
+| coverage | 0.549 | **1.000** | 0.000 |
+| unsupported_verdict_rate | **0.000** | 1.000 | **0.000** |
+| false_approval_rate | **0.000** | 0.670 | **0.000** |
+| provenance_admission_error | **0.000** | 0.379 | **0.000** |
+| over_refusal_rate | **0.000** | 0.000 | 0.549 |
+| citation_exact | **1.000** | 0.059 | 0.059 |
+| abstention_reason_accuracy | **1.000** | 0.000 | 0.131 |
+
+A model that certifies nothing scores **perfectly on all three headline safety numbers** and is useless. A model that certifies everything scores perfectly on coverage and is wrong about everything else. Any number a trained model earns is read against these.
+
+`strict_accuracy` requires the verdict, the governing citation, the observation relied on, **and** the follow-up action to all be right together. An abstention must also carry the *right reason*: “the drawing is silent” and “the value was copied from the spec” send the question to different people.
+
+**Controls**, never trained on: [XSTest](https://huggingface.co/datasets/Paul/XSTest) carries both halves of the safety question in one 450-prompt set, labelled 250 safe and 200 unsafe — measuring only harmful compliance is how a fine-tune looks safe by becoming useless, and measuring only over-refusal is the reverse. ARC-Easy, a fixed 100-item sample, for general capability.
+
+## Corpus
+
+Eight sections of federal guide specification, all works of the US government and publishable in full. They stand in as a **public surrogate** for “an organisation's own documents”. No proprietary specification is used, quoted or published.
+
+| Section | Authority | Split |
+|---|---|---|
+| 23 30 00 HVAC Air Distribution · 23 07 00 Thermal Insulation · 23 31 13.00 40 Metal Ducts · 23 05 93 · 23 08 00 · 22 00 00 | UFGS | train |
+| **23 31 00 HVAC Ducts and Casings · 23 07 11 HVAC Insulation** | **VA PG-18-1** | **holdout** |
+
+Every PDF is sha256-locked. These sections are revised in place, so the designation alone is not a reproducible reference.
+
+Two properties of a *guide* specification decide whether a clause is citable at all. **Designer notes are stripped** — instructions to the engineer editing the document, binding on nobody; citing one as authority is quoting a comment as law. **Unadopted clauses are excluded** — a guide spec ships with `[_____]` blanks and unresolved alternatives, and until the designer chooses there is no requirement to comply with. Those become the material for `APPLICABILITY_UNKNOWN` cases rather than being thrown away.
+
+No SMACNA, ASHRAE or other paywalled standard is reproduced. Where one is relevant it is cited by designation only — which is itself a source of genuine `MISSING_AUTHORITY` cases, since the specification points at a document that legitimately cannot be in the packet.
+
+## What went wrong, and stayed in the record
+
+**The parser deleted an applicability condition and invented a requirement.** (`e71f1b7`) VA note-stripping used UFGS's heading shape; VA headings use one space, so the skip ran past `2.3 DUCT LINER (WHERE INDICATED ON DRAWINGS)` and deleted it. The requirements file had already recorded that rule as clause 2.2.B, universal — an id that does not exist, carrying a requirement that binds only where the drawings call for lining.
+
+**A 60-character cap let an unmade choice through as settled law.** (`5cc5eae`) UFGS 3.2.7.1's first alternative is exactly 60 characters long.
+
+**Table figures became clauses with fabricated ids.** (`a961d7d`, `647329b`) Insulation thickness tables produced clauses numbered `0.235`, `401.5`, `61.552`. The first fix removed them and silently dropped real clauses 3.3 and 3.4 as well; I reported that as a success. The second fix validates headings against the document's own table of contents, by id *and* title.
+
+**Strict accuracy ignored the observation.** A verdict citing the right clause while pointing at nothing scored as fully correct — and the test helper's own “perfect prediction” omitted observations, which is why nothing caught it. When fixed, the base model's zero-shot score dropped from apparently-perfect to 1 of 3.
+
+These are in the README because the project's claim is that unverified confidence is the failure mode. It would be incoherent to make that claim and quietly tidy away the four times we committed it.
 
 ## Reproduce
 
 ```bash
 uv venv --python 3.12 .venv && . .venv/bin/activate
 uv pip install -e ".[dev]"
-python -m ductspec.sources      # fetch + hash the corpus
-pytest -q
+
+python -m ductspec.sources            # fetch and sha256-freeze the corpus
+python -m ductspec.generate           # build the dataset
+python scripts/export_arms.py         # conversational JSONL per arm
+python scripts/baselines.py           # the three reference behaviours
+pytest -q                             # 70 tests
 ```
 
-## Hackathon rules compliance
+Training and evaluation:
 
-| Rule | How this submission meets it |
+```bash
+python scripts/train.py curated       # one arm; run twice
+python scripts/predict.py base        # generate, keep every generation
+python scripts/evaluate.py            # score all states through AuditKIT
+python scripts/roi.py --volume 100000
+```
+
+## Hackathon rules
+
+| Rule | How this meets it |
 |---|---|
-| ≥2 repos from the track, 3+ preferred | **3**: CuratorKIT → AlignTune → AuditKIT, each consuming the previous one's artifact |
-| Dense open-weights Cohere model | Tiny Aya Global (3.35B). Any other model appears only as a teacher generator or judge, which the rules permit |
-| All artifacts on Hugging Face | adapters, datasets, evaluation logs — public, un-gated collections |
-| Public deployment by the deadline | HF Space (ZeroGPU) + this public repo |
-| Before-and-after metrics, more than one | base / raw-SFT / curated-SFT across the metric table, on one frozen test set |
-| Write-up | HF Article, mirrored here |
-| ROI comparison *(optional but preferred)* | measured GPU hours and throughput from the training runs, against closed-model token billing at an explicit volume |
-| Originality | own work, built during the hackathon window; public-domain corpus only |
+| ≥2 track repos chained, 3+ preferred | **3** — CuratorKIT → AlignTune → AuditKIT, each consuming the previous artifact |
+| Dense open-weights Cohere model | Tiny Aya Global (3.35B). Other models appear only as teacher or judge, which the rules permit |
+| All artifacts on Hugging Face | adapters, datasets, generations, evaluation logs — public, un-gated collections |
+| Deployed publicly | HF Space + this repository |
+| Before-and-after metrics, more than one | base / raw-SFT / curated-SFT across ten metrics on one frozen test set, with bootstrap significance |
+| Write-up | this document, mirrored as an HF Article |
+| ROI comparison *(optional)* | `scripts/roi.py`, from measured GPU hours and throughput |
+| Originality | own work, built during the hackathon window, public-domain corpus only |
 
 ## Licensing
 
-- **This code:** Apache-2.0.
-- **Dataset:** derived from UFGS, a US federal government work in the public domain.
-- **Adapters:** derived from Tiny Aya, which Cohere Labs releases under
-  CC-BY-NC 4.0 with an acceptable-use policy — the adapters are therefore
-  **non-commercial** and are published as such.
-- **Toolkits:** CuratorKIT, AlignTune and AuditKIT are Lexsi Labs
-  source-available (LSAL) libraries, used as dependencies, not vendored.
-- No SMACNA, ASHRAE or other paywalled standard is reproduced. Where such a
-  standard is relevant it is cited by designation only.
+Code **Apache-2.0**. Dataset derived from UFGS and VA PG-18-1, US federal government works in the public domain. Adapters derive from Tiny Aya, which Cohere Labs releases under **CC-BY-NC 4.0** with an acceptable-use policy, and are published as non-commercial. CuratorKIT, AlignTune and AuditKIT are Lexsi Labs source-available libraries, used as dependencies and not vendored.
