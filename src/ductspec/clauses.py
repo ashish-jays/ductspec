@@ -157,8 +157,28 @@ def parse_clauses(pdf_path: Path, source_id: str, convention: Convention = UFGS)
     lines = body.split("\n")
     clauses: list[Clause] = []
     current_part = ""
+    current_part_no = 0
+    last_number: tuple[int, ...] = ()
     pending: tuple[str, str] | None = None   # (clause_id, title)
     buffer: list[str] = []
+
+    def is_real_heading(clause_id: str) -> bool:
+        """Reject numbers that are table data rather than clause headings.
+
+        These specifications are full of figures that look like clause ids —
+        "0.235", "401.5", "61.552" — and a run of them inside an insulation
+        thickness table was producing clauses numbered after gauge values, with
+        ids that collide with real ones. A citation to a fabricated clause is
+        the worst thing this dataset could contain, so headings are checked
+        against the document's own structure rather than their shape: a clause
+        number belongs to the PART it sits in, and numbering runs forward.
+        """
+        parts = clause_id.split(".")
+        try:
+            number = tuple(int(x) for x in parts)
+        except ValueError:
+            return False
+        return number[0] == current_part_no and number > last_number
 
     def flush() -> None:
         if pending is None:
@@ -191,6 +211,8 @@ def parse_clauses(pdf_path: Path, source_id: str, convention: Convention = UFGS)
             flush()
             pending, buffer = None, []
             current_part = f"PART {m.group(1)} {m.group(2).strip()}"
+            current_part_no = int(m.group(1))
+            last_number = ()
             i += 1
             continue
 
@@ -204,9 +226,13 @@ def parse_clauses(pdf_path: Path, source_id: str, convention: Convention = UFGS)
                 heading = (m.group(1), nxt)
                 i += 1
 
+        if heading and not is_real_heading(heading[0]):
+            heading = None   # a table figure, not a clause
+
         if heading:
             flush()
             pending, buffer = heading, []
+            last_number = tuple(int(x) for x in heading[0].split("."))
         elif pending is not None:
             buffer.append(line)
         i += 1

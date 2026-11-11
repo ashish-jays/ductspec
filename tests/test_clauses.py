@@ -211,3 +211,29 @@ def test_unmade_choices_are_uncitable_in_either_notation():
     assert unresolved, "VA 23 31 00 offers the engineer several unmade choices"
     # e.g. duct pressure class is offered as 2, 3 or 4 inch WG until selected.
     assert any("//" in c.text for c in unresolved)
+
+
+@pytest.mark.skipif(not (SOURCES / "UFGS-23-07-00.pdf").exists(), reason="run ductspec.sources first")
+def test_table_figures_do_not_become_clauses():
+    """Insulation thickness tables are full of numbers that look like clause
+    ids — 0.235, 401.5, 61.552 — and a run of them was producing clauses
+    numbered after gauge values, some colliding with real clause ids.
+
+    A citation to a clause that does not exist is the worst thing this dataset
+    could contain, so this is a regression test rather than a style check.
+    """
+    clauses = parse_clauses(SOURCES / "UFGS-23-07-00.pdf", "UFGS-23-07-00")
+    ids = [c.clause_id for c in clauses]
+
+    assert len(ids) == len(set(ids)), "clause ids must be unique"
+    for cid in ids:
+        head = int(cid.split(".")[0])
+        assert head in (1, 2, 3), f"{cid} is outside the document's PART numbering"
+
+    # Numbering runs forward within each PART.
+    for part in (1, 2, 3):
+        numbers = [tuple(int(x) for x in c.split(".")) for c in ids if c.startswith(f"{part}.")]
+        assert numbers == sorted(numbers), f"PART {part} numbering is out of order"
+
+    # The requirement we actually cite survived the filter.
+    assert "2.4.5" in ids
