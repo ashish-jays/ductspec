@@ -1,10 +1,32 @@
 # The requirement extractions BEFORE audit — the raw arm of the ablation.
 #
-# This file is not a worse version written to create an effect. It is what the
-# extraction actually produced on 11 November 2026, before anything was checked
-# against the PDF page. Two of the errors came from the parser rather than the
-# reader, which is the point: both files look equally confident, and only
-# opening the document tells them apart.
+# HOW TO READ THIS FILE, honestly stated.
+#
+# This is a RECONSTRUCTION, not a contemporaneous capture. The faults below are
+# real: each one was in the working requirement set at some point on 11 November
+# 2026 and is recorded in the repository history. But the file itself was
+# written after the audit, by restoring what the audit had changed. We did not
+# have the foresight to snapshot the pre-audit state, and saying otherwise would
+# be the same kind of claim this project exists to refuse.
+#
+# The evidence that these faults occurred, rather than being invented to create
+# an effect, is in the commits that fixed them:
+#
+#   5cc5eae  "a spec writer's unresolved choice is not a requirement"
+#            The alternatives pattern capped each option at 60 characters. UFGS
+#            3.2.7.1's first option is exactly 60, so the clause passed as
+#            operative and was citable as settled authority on a kitchen
+#            exhaust question.
+#
+#   e71f1b7  "the parser manufactured a requirement nobody adopted"
+#            Designer-note stripping used the UFGS heading shape on a VA
+#            document. VA headings use one space, so the skip ran past
+#            "2.3 DUCT LINER (WHERE INDICATED ON DRAWINGS)" and deleted it.
+#            The requirement was recorded as 2.2.B, universal.
+#
+# Two of the four faults came from our own parser rather than from careless
+# reading, which is the part worth keeping in mind: both files look equally
+# confident, and only opening the document tells them apart.
 #
 # What is wrong here, and how the audit found it:
 #
