@@ -184,6 +184,31 @@ def scorers() -> list[Metric]:
     ]
 
 
+def with_outputs(rows: list[dict], saved: dict[str, str]) -> list[ak.Sample]:
+    """Samples carrying generations that were produced elsewhere.
+
+    AuditKIT identifies a callable model by its code, not by what it closes
+    over. Two closures built by the same factory — one replaying the base
+    model's answers, one replaying an adapter's — are therefore the same model
+    as far as the run cache is concerned, and the second silently receives the
+    first's results. Verified: both runs came back with the same run_id, and a
+    model answering COMPLIANT to everything reported 1.0000 strict accuracy.
+
+    Attaching the generations to the samples avoids the question entirely.
+    """
+    from dataclasses import replace
+
+    out = []
+    for sample in to_samples(rows):
+        if sample.id not in saved:
+            raise KeyError(
+                f"no generation for {sample.id}. Scoring a partial run would "
+                "compare different row sets between models."
+            )
+        out.append(replace(sample, actual_output=saved[sample.id]))
+    return out
+
+
 def compare(models: list, rows: list[dict], names: list[str] | None = None):
     """Run the model states over one frozen test set and grade the difference.
 

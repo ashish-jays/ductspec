@@ -19,7 +19,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 import auditkit as ak  # noqa: E402
 
-from ductspec.audit import scorers, to_samples  # noqa: E402
+from ductspec.audit import scorers, with_outputs  # noqa: E402
 from ductspec.prompt import render  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -33,23 +33,9 @@ ALWAYS_ABSTAIN = json.dumps({
     "missing_evidence": ["MISSING_OBSERVATION"], "action": "REQUEST_MISSING_DETAIL"})
 
 
-def replay(name: str, rows: list[dict]):
-    """A model that answers from a saved generation file."""
+def saved_outputs(name: str) -> dict[str, str]:
     path = PREDICTIONS / f"{name}.jsonl"
-    saved = {json.loads(line)["id"]: json.loads(line)["output"] for line in path.open()}
-    by_prompt = {render(r["input"]): r["id"] for r in rows}
-    missing = [r["id"] for r in rows if r["id"] not in saved]
-    if missing:
-        raise SystemExit(
-            f"{name}: no generation for {len(missing)} rows (first: {missing[0]}). "
-            "Scoring a partial run would silently compare different row sets."
-        )
-
-    def model(prompts):
-        return [saved[by_prompt[p]] for p in prompts]
-
-    model.__name__ = name
-    return model
+    return {json.loads(line)["id"]: json.loads(line)["output"] for line in path.open()}
 
 
 def main() -> None:
@@ -59,33 +45,49 @@ def main() -> None:
     args = ap.parse_args()
 
     rows = [json.loads(line) for line in (ROOT / args.split).open()]
-    samples = to_samples(rows)
 
-    models, names = [], []
+    # Each model state is scored from its own saved generations, attached to
+    # the samples. Replaying them through callables instead would make every
+    # state share one cache entry — see ductspec.audit.with_outputs.
+    states: dict[str, dict[str, str]] = {}
     for state in args.states:
         if (PREDICTIONS / f"{state}.jsonl").exists():
-            models.append(replay(state, rows))
-            names.append(state)
+            states[state] = saved_outputs(state)
         else:
             print(f"(skipping {state}: no generations yet)")
 
-    by_prompt = {render(r["input"]): r for r in rows}
-    models += [
-        lambda ps: [json.dumps(by_prompt[p]["target"]) for p in ps],
-        lambda ps: [ALWAYS_COMPLIANT] * len(ps),
-        lambda ps: [ALWAYS_ABSTAIN] * len(ps),
-    ]
-    names += ["oracle", "always-compliant", "always-abstain"]
+    states["oracle"] = {r["id"]: json.dumps(r["target"]) for r in rows}
+    states["always-compliant"] = {r["id"]: ALWAYS_COMPLIANT for r in rows}
+    states["always-abstain"] = {r["id"]: ALWAYS_ABSTAIN for r in rows}
 
-    result = ak.compare_models(
-        models, samples, scorers=scorers(), model_names=names,
-        experiment_name="ductspec-conformance", tags=["ductspec", "track1"],
-    )
-    print(result.summary())
+    runs = {}
+    for name, saved in states.items():
+        runs[name] = ak.evaluate(
+            with_outputs(rows, saved), model="precomputed", scorers=scorers(),
+            experiment_name="ductspec-conformance", tags=["ductspec", "track1", name],
+        )
+
+    lines = [f"DuctSpec — {len(rows)} samples, {len(scorers())} metrics", ""]
+    metrics = [m.name for m in scorers()]
+    width = max(len(m) for m in metrics) + 2
+    lines.append("metric".ljust(width) + "".join(n.rjust(20) for n in runs))
+    lines.append("-" * (width + 20 * len(runs)))
+    for metric in metrics:
+        row = metric.ljust(width)
+        for run in runs.values():
+            value = run.headline.get(metric)
+            row += (f"{value:.4f}" if value is not None else "n/a").rjust(20)
+        lines.append(row)
+    lines.append("")
+    for name, run in runs.items():
+        lines.append(f"{name}: run_id={run.run_id}")
+    summary = "\n".join(lines)
+    print(summary)
 
     out = ROOT / "data" / "build" / "comparison.txt"
-    out.write_text(result.summary())
+    out.write_text(summary + "\n")
     print(f"\n-> {out.relative_to(ROOT)}")
+    return
 
     # Per-panel, so transfer to the held-out authority is reported separately
     # from behaviour under authorities seen in training.
