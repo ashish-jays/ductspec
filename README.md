@@ -68,6 +68,8 @@ Two adapters, trained on datasets that differ by **exactly one requirement**.
 
 The raw arm was built from the extraction *before* it was audited, and so includes UFGS 3.2.7.1 — a clause offering the engineer 18 gauge stainless or 16 gauge carbon steel for grease-laden duct, with nobody having chosen yet. Everything else is identical: same generator, same seed, same family-to-split assignment, same test set, and token exposure matched to within 0.3% (prompt 133,724 vs 133,382; supervised 14,856 vs 14,810).
 
+The test set asks the question that requirement gets wrong. A `curation_probe` panel shows the model clause 3.2.7.1 itself, bracketed alternatives and all, on a kitchen exhaust duct, and the right answer is that nothing has been required yet (`APPLICABILITY_UNKNOWN`). Neither arm trains on those packets. Both arms train on four *other* unmade choices from the same section (`data/unadopted.yaml`), so a model has the chance to learn the convention. The raw arm additionally trains on 3.2.7.1 as settled law. Without this panel the two adapters were scored on a test set where the faulty clause never appeared. `python scripts/probe_report.py` scores each model state on the panel.
+
 Two confounds had to be removed to get there. The raw set has more requirements and so generated more records, which would have meant one adapter simply saw more tokens. And family-to-split assignment was decided by position in a shuffled list whose length depends on how many requirements are present, so a family could land in train for one arm and dev for the other — the comparison would partly have measured the shuffle.
 
 ## Metrics, and why no single one is the headline

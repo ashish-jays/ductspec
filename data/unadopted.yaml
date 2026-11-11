@@ -1,0 +1,78 @@
+# Clauses that state a choice nobody has made.
+#
+# A guide specification offers the designer alternatives side by side and asks
+# them to pick: UFGS writes "[A] [B]". Until they do, the clause imposes
+# nothing, and a review that judges a duct against one of the options has
+# invented a requirement.
+#
+# These are not requirements, so they are not in requirements.yaml. They are
+# kept here because being shown one and declining to treat it as settled is
+# part of the task. Every quote is copied from the clause it is attributed to;
+# tests/test_probes.py checks each against the PDF when the corpus is fetched,
+# and checks that the document's own convention marks it as an unmade choice.
+#
+# probe: true
+#   Never trained on, in either arm. UFGS 3.2.7.1 is the one requirement that
+#   separates the raw arm from the curated arm: the raw extraction recorded it
+#   as "stainless steel, every system". Its packets go to the test set only, in
+#   their own panel, so the evaluation asks the question the raw arm was taught
+#   the wrong answer to.
+#
+# probe: false
+#   Other unmade choices from the same section, split by family like everything
+#   else. They are what gives a model the chance to learn the convention rather
+#   than one clause id.
+#
+# drawn_values are what the generator letters on the sheet for these packets.
+# They say nothing about the clause.
+
+unadopted:
+  - id: U-UFGS-3.2.7.1-material
+    source: UFGS-23-30-00
+    clause_id: 3.2.7.1
+    page: 79
+    property: material
+    applies_to: {systems: [kitchen_exhaust], element: duct}
+    probe: true
+    drawn_values: [stainless_steel_304, black_iron]
+    quote: "Provide duct material that is a [minimum 1.3 mm 18 gauge , Type 304L or 316L, stainless steel] [minimum 1.6 mm 16 gauge carbon steel]."
+
+  - id: U-UFGS-3.2.7.3-material
+    source: UFGS-23-30-00
+    clause_id: 3.2.7.3
+    page: 80
+    property: material
+    applies_to: {systems: [], element: concealed_moisture_duct}
+    probe: false
+    drawn_values: [stainless_steel_304, galvanized_steel]
+    quote: "Fabricate concealed ducts conveying moisture laden air from minimum [ 1.3 mm 18 gauge , Type 300 series, stainless steel] [ 1.6 mm 16 gauge , galvanized steel] [ 0.55 mm 16 ounce , tempered copper sheet]."
+
+  - id: U-UFGS-2.12.12-material
+    source: UFGS-23-30-00
+    clause_id: 2.12.12
+    page: 38
+    property: material
+    applies_to: {systems: [], element: diffuser_register_grille}
+    probe: false
+    drawn_values: [aluminum, stainless_steel_316]
+    quote: "Provide factory-fabricated units of [steel][corrosion-resistant steel][ or ][aluminum] that distribute the specified quantity of air evenly over space intended"
+
+  - id: U-UFGS-2.13.2.6-material
+    source: UFGS-23-30-00
+    clause_id: 2.13.2.6
+    page: 50
+    property: material
+    applies_to: {systems: [], element: moisture_eliminator}
+    probe: false
+    drawn_values: [galvanized_steel, stainless_steel_316]
+    quote: "Construct of minimum 24 gage [zinc-coated steel] [copper] [copper nickel] [or] [stainless steel], removable through the nearest access door in the casing or ductwork."
+
+  - id: U-UFGS-2.15.3-material
+    source: UFGS-23-30-00
+    clause_id: 2.15.3
+    page: 68
+    property: material
+    applies_to: {systems: [], element: unit_ventilator_casing}
+    probe: false
+    drawn_values: [galvanized_steel, black_iron]
+    quote: "Provide unit ventilators that include an enclosure, [galvanized casing,] [cold-rolled steel casing with corrosion resistant coating,] coil assembly"

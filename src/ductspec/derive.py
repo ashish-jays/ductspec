@@ -89,12 +89,24 @@ def derive(duct: DuctObject, prop: str, packet: Packet) -> Derivation:
     # A clause that only points elsewhere settles nothing by itself. It becomes
     # MISSING_AUTHORITY only if nothing else supplied settles the question —
     # an unresolved pointer alongside an applicable rule is not a dead end.
-    concrete = [r for r in candidates if not r.is_reference]
+    concrete = [r for r in candidates if not r.is_reference and not r.is_unadopted]
+    unadopted = [r for r in candidates if r.is_unadopted]
     unresolved = [
         r for r in candidates
         if r.is_reference and r.predicate["target"] not in packet.sources
     ]
     if not concrete:
+        if unadopted:
+            # The clause is about this object and offers alternatives nobody has
+            # chosen between. It is not cited as governing: until the designer
+            # picks, there is nothing in it to comply with, and judging the duct
+            # against one option invents a requirement.
+            r = unadopted[0]
+            return _abstain(
+                "APPLICABILITY_UNKNOWN", "REQUEST_APPLICABILITY_CLARIFICATION",
+                f"Clause {r.clause_id} offers alternatives and records no choice "
+                "between them, so it does not yet state a requirement.",
+            )
         if unresolved:
             r = unresolved[0]
             return _abstain(
