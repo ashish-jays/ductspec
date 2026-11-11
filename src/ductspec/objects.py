@@ -48,6 +48,14 @@ class DuctObject:
     width_in: int
     height_in: int
     properties: dict[str, Property] = field(default_factory=dict)
+    # What this object is. Requirements are written about particular things —
+    # a casing, a liner, an underground run — and a rule about one is not a
+    # rule about another.
+    element: str = "duct"
+    # Applicability facts the drawing establishes, e.g.
+    # {"lining_indicated_on_drawings": True}. A fact that is absent is unknown,
+    # which is a different thing from false.
+    facts: dict[str, bool] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         if self.system not in SYSTEMS:
@@ -81,7 +89,9 @@ class DuctObject:
             "id": self.id,
             "system": self.system,
             "dimensions_in": [self.width_in, self.height_in],
+            "element": self.element,
             "properties": {k: v.as_dict() for k, v in self.properties.items()},
+            **({"facts": self.facts} if self.facts else {}),
         }
 
 
