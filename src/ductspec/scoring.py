@@ -49,6 +49,10 @@ def is_supported(gold: dict, pred: dict) -> bool:
         return False
 
     if verdict in DEFINITIVE:
+        # Was a definitive answer even available on this case? Checking the
+        # citations first lets a lucky guess on an unanswerable packet pass.
+        if not gold.get("meta", {}).get("answer_available", _has_independent_evidence(gold)):
+            return False
         if not _has_independent_evidence(gold):
             return False
         if set(pred.get("governing_ids") or []) != set(gold["target"]["governing_ids"]):

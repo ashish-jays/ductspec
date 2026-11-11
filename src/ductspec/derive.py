@@ -45,10 +45,22 @@ class Derivation:
     missing_evidence: tuple[str, ...]
     action: str
     reason: str
+    # Which of the governing clauses were actually not met. A non-compliant
+    # duct is still governed by every applicable clause — citing only the
+    # failed one would teach the model that the others stopped applying.
+    failed_ids: tuple[str, ...] = ()
+    # Evaluation-only. Never shown to the model; it exists so the scorer can
+    # tell a right answer from a right answer that happened to match. Without
+    # it, a definitive guess on an unanswerable case looks supported whenever
+    # its citations line up.
+    answer_available: bool = False
 
 
 def _abstain(code: str, action: str, reason: str, governing=()) -> Derivation:
-    return Derivation("INSUFFICIENT_EVIDENCE", tuple(governing), (), (code,), action, reason)
+    return Derivation(
+        "INSUFFICIENT_EVIDENCE", tuple(governing), (), (code,), action, reason,
+        answer_available=False,
+    )
 
 
 def derive(duct: DuctObject, prop: str, packet: Packet) -> Derivation:
@@ -128,12 +140,23 @@ def derive(duct: DuctObject, prop: str, packet: Packet) -> Derivation:
     failed = [r for r in governing if not r.satisfied_by(observed.value)]
     if failed:
         return Derivation(
-            "NON_COMPLIANT", tuple(r.clause_id for r in failed), (observed.source_id,), (),
+            "NON_COMPLIANT", tuple(cites), (observed.source_id,), (),
             "RFI_DRAWING_SPEC_DISCREPANCY",
-            "The value shown on the drawing does not meet the cited requirement.",
+            "The value shown on the drawing does not meet "
+            + _name(failed) + ".",
+            failed_ids=tuple(r.clause_id for r in failed),
+            answer_available=True,
         )
     return Derivation(
         "COMPLIANT", tuple(cites), (observed.source_id,), (),
         "NONE_FOR_THIS_CHECK",
-        "The value shown on the drawing satisfies the cited requirement.",
+        "The value shown on the drawing satisfies " + _name(governing) + ".",
+        answer_available=True,
     )
+
+
+def _name(reqs) -> str:
+    ids = [r.clause_id for r in reqs]
+    if len(ids) == 1:
+        return f"clause {ids[0]}"
+    return "clauses " + ", ".join(ids[:-1]) + f" and {ids[-1]}"

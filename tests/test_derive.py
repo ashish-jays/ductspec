@@ -141,4 +141,22 @@ def test_where_two_requirements_apply_both_must_be_met():
     out = derive(liner, "insulation_thickness_in",
                  packet(ALL["R-UFGS-2.12.11.3-liner"], kitchen_liner))
     assert out.verdict == "NON_COMPLIANT"
-    assert out.governing_ids == ("2.4.5",)
+    # Both clauses still govern — failing one does not make the other stop
+    # applying — but only the unmet one is recorded as failed.
+    assert set(out.governing_ids) == {"2.12.11.3", "2.4.5"}
+    assert out.failed_ids == ("2.4.5",)
+
+
+# --- evaluation-only metadata ----------------------------------------------
+
+def test_answerability_is_recorded_so_a_lucky_guess_cannot_look_supported():
+    answerable = kitchen_duct(insulation_thickness_in=observed(3.0, "D-401", note=4))
+    silent = kitchen_duct()
+
+    assert derive(answerable, "insulation_thickness_in", packet(KITCHEN_INSULATION)).answer_available
+    assert not derive(silent, "insulation_thickness_in", packet(KITCHEN_INSULATION)).answer_available
+
+
+def test_the_reason_names_the_clauses_it_rests_on():
+    duct = kitchen_duct(insulation_thickness_in=observed(1.0, "D-401", note=4))
+    assert "clause 2.4.5" in derive(duct, "insulation_thickness_in", packet(KITCHEN_INSULATION)).reason
