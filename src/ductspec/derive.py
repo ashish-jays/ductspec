@@ -29,6 +29,16 @@ from .objects import DuctObject
 from .requirements import Requirement
 
 
+# What a reviewer owes when the specification states the requirement and the
+# drawing does not show the property. FAR 52.236-21(a): "Anything mentioned in
+# the specifications and not shown on the drawings ... shall be of like effect
+# as if shown or mentioned in both." A silent drawing is therefore not a
+# discrepancy and needs no written determination: the specification applies,
+# and the value is recorded as specification-derived rather than as something
+# the drawing confirmed. Only a difference between the two goes to an RFI.
+SILENT_DRAWING_ACTION = "FOLLOW_SPEC_RECORD_AS_SPEC_DERIVED"
+
+
 @dataclass(frozen=True)
 class Packet:
     """What was actually put in front of the reviewer."""
@@ -79,12 +89,24 @@ def derive(duct: DuctObject, prop: str, packet: Packet) -> Derivation:
     # A clause that only points elsewhere settles nothing by itself. It becomes
     # MISSING_AUTHORITY only if nothing else supplied settles the question —
     # an unresolved pointer alongside an applicable rule is not a dead end.
-    concrete = [r for r in candidates if not r.is_reference]
+    concrete = [r for r in candidates if not r.is_reference and not r.is_unadopted]
+    unadopted = [r for r in candidates if r.is_unadopted]
     unresolved = [
         r for r in candidates
         if r.is_reference and r.predicate["target"] not in packet.sources
     ]
     if not concrete:
+        if unadopted:
+            # The clause is about this object and offers alternatives nobody has
+            # chosen between. It is not cited as governing: until the designer
+            # picks, there is nothing in it to comply with, and judging the duct
+            # against one option invents a requirement.
+            r = unadopted[0]
+            return _abstain(
+                "APPLICABILITY_UNKNOWN", "REQUEST_APPLICABILITY_CLARIFICATION",
+                f"Clause {r.clause_id} offers alternatives and records no choice "
+                "between them, so it does not yet state a requirement.",
+            )
         if unresolved:
             r = unresolved[0]
             return _abstain(
@@ -123,13 +145,13 @@ def derive(duct: DuctObject, prop: str, packet: Packet) -> Derivation:
     cites = [r.clause_id for r in governing]
     if observed is None or observed.value is None:
         return _abstain(
-            "MISSING_OBSERVATION", "REQUEST_MISSING_DETAIL",
+            "MISSING_OBSERVATION", SILENT_DRAWING_ACTION,
             "The requirement is known, but the drawing does not show this property.",
             governing=cites,
         )
     if not observed.is_independent:
         return _abstain(
-            "INFERRED_VALUE_ONLY", "REQUEST_MISSING_DETAIL",
+            "INFERRED_VALUE_ONLY", SILENT_DRAWING_ACTION,
             "The only value available was not read from the drawing, so it cannot "
             "show that the drawing complies.",
             governing=cites,

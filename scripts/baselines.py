@@ -20,6 +20,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 import auditkit as ak  # noqa: E402
 
 from ductspec.audit import scorers, to_samples  # noqa: E402
+from ductspec.prompt import render  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -35,7 +36,7 @@ ALWAYS_ABSTAIN = json.dumps({
 
 def main(split: str = "test") -> None:
     rows = [json.loads(line) for line in (ROOT / "data" / "build" / f"{split}.jsonl").open()]
-    by_prompt = {json.dumps(r["input"], indent=1): r for r in rows}
+    by_prompt = {render(r["input"]): r for r in rows}
 
     def oracle(prompts):
         return [json.dumps(by_prompt[p]["target"]) for p in prompts]

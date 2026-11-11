@@ -14,12 +14,15 @@ If that filled-in value is later checked **against the specification it was copi
 
 ```
 duct        D-303 · supply air · 600 × 350
-callout     "D-303: 600 x 350 SA"
-insulation  25 mm          ← COPIED_FROM_SPEC
+drawing     "D-303: 600 x 350 SA"
+            "D-310: 600 x 350 25 mm INSUL SA"     ← a different duct
+takeoff     insulation 25 mm
 verdict     COMPLIANT      ← wrong
 ```
 
-The drawing never said 25 mm. The specification did. There is no evidence here either way, and the only honest answer is to ask for the insulation detail.
+The drawing never said 25 mm for D-303. The specification did. The honest answer is that the drawing does not verify this value: the specification still applies, and the value is recorded as specification-derived rather than as something the drawing confirmed.
+
+The model is not told where the takeoff value came from. It is given the lines lettered on the sheet and has to decide whether any of them applies to this duct: its own tag or schedule row, a note covering a run that includes it, or a general note for its system. The origin of each value stays in the record as the answer key and is withheld from the prompt.
 
 > **Thesis.** Provenance-curated fine-tuning reduces unsupported conformance verdicts — especially where specification-derived or default-filled values masquerade as drawing evidence — without sacrificing answerable coverage.
 
@@ -40,7 +43,7 @@ The drawing never said 25 mm. The specification did. There is no evidence here e
 
 The order is the design. You cannot ask whether the drawing shows enough before knowing what you are checking against, and you cannot compare a value to a requirement that does not apply.
 
-Where the documents fall silent or conflict, the answer is not “I don't know” — it is a scoped request for written clarification. [FAR 52.236-21](https://www.acquisition.gov/far/52.236-21) gives specifications precedence over drawings *and* requires discrepancies to be submitted for a written determination. That is the RFI, in federal contract language.
+Where the documents fall silent or conflict, the answer is not “I don't know” — it is the specific next step the contract calls for, and silence and conflict are different. [FAR 52.236-21](https://www.acquisition.gov/far/52.236-21) says anything mentioned in the specifications and not shown on the drawings is of like effect as if shown in both. A drawing that is silent is therefore not a discrepancy: the specification applies, and the value is recorded as specification-derived (`FOLLOW_SPEC_RECORD_AS_SPEC_DERIVED`). The same clause sends a *difference* between drawing and specification for a written determination. That is the RFI, in federal contract language, and it is reserved for the case where the drawing says something else. The rule is supplied in the packet's policy text, not assumed.
 
 We deliberately do **not** train a fixed `code > standard > specification > drawing` ladder. Which document governs depends on jurisdiction, adopted edition and incorporation by reference, and a project specification routinely imposes something stricter than a standard's minimum. The governing policy is supplied as evidence; the model applies the one it was given.
 
@@ -64,6 +67,8 @@ Three track repos, each consuming the previous one's artifact.
 Two adapters, trained on datasets that differ by **exactly one requirement**.
 
 The raw arm was built from the extraction *before* it was audited, and so includes UFGS 3.2.7.1 — a clause offering the engineer 18 gauge stainless or 16 gauge carbon steel for grease-laden duct, with nobody having chosen yet. Everything else is identical: same generator, same seed, same family-to-split assignment, same test set, and token exposure matched to within 0.3% (prompt 133,724 vs 133,382; supervised 14,856 vs 14,810).
+
+The test set asks the question that requirement gets wrong. A `curation_probe` panel shows the model clause 3.2.7.1 itself, bracketed alternatives and all, on a kitchen exhaust duct, and the right answer is that nothing has been required yet (`APPLICABILITY_UNKNOWN`). Neither arm trains on those packets. Both arms train on four *other* unmade choices from the same section (`data/unadopted.yaml`), so a model has the chance to learn the convention. The raw arm additionally trains on 3.2.7.1 as settled law. Without this panel the two adapters were scored on a test set where the faulty clause never appeared. `python scripts/probe_report.py` scores each model state on the panel.
 
 Two confounds had to be removed to get there. The raw set has more requirements and so generated more records, which would have meant one adapter simply saw more tokens. And family-to-split assignment was decided by position in a shuffled list whose length depends on how many requirements are present, so a family could land in train for one arm and dev for the other — the comparison would partly have measured the shuffle.
 

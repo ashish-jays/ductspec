@@ -139,7 +139,7 @@ def test_same_number_relabelled_as_inferred_flips_to_abstention():
 def test_silent_drawing_flips_to_abstention():
     twin = remove_observation(_base())
     assert twin["target"]["missing_evidence"] == ["MISSING_OBSERVATION"]
-    assert twin["target"]["action"] == "REQUEST_MISSING_DETAIL"
+    assert twin["target"]["action"] == "FOLLOW_SPEC_RECORD_AS_SPEC_DERIVED"
 
 
 def test_conflict_without_precedence_escalates_as_an_rfi():

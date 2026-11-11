@@ -22,6 +22,7 @@ from dataclasses import dataclass, asdict
 from pathlib import Path
 
 from .derive import Packet, derive
+from .drawing import lines as drawing_lines
 from .objects import (
     DuctObject,
     Property,
@@ -30,7 +31,7 @@ from .objects import (
     observed,
     scheduled,
 )
-from .requirements import Requirement, load
+from .requirements import Requirement, load, load_unadopted
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "data" / "build"
@@ -95,8 +96,44 @@ def _duct(n: int, req: Requirement, value, origin: str, facts=None, ctx=None) ->
         raise ValueError(origin)
     return DuctObject(
         f"D-{n}", system, ctx["w"], ctx["h"], {req.property: prop},
-        element=req.element, facts=dict(facts or {}),
+        element=req.element, facts=dict(facts or {}), sheet=ctx["sheet"],
     )
+
+
+POLICY_TEXT = (
+    "Review only the requested property, using only the supplied evidence. A value "
+    "that was not read from the drawing does not establish what the drawing shows. "
+    "FAR 52.236-21 applies: anything mentioned in the specifications and not shown on "
+    "the drawings is of like effect as if shown in both, so where the drawing is silent "
+    "the specification still applies and the value is recorded as specification-derived. "
+    "Only a difference between the drawing and the specification is submitted for a "
+    "written determination."
+)
+
+
+def _lettered(duct: DuctObject, prop: str) -> tuple[list[dict], dict]:
+    """The sheet lines for this duct, and the object with its quote of them.
+
+    A back-filled value is lettered elsewhere on the sheet, against a different
+    duct, run or system: the right number in the wrong place. A value the
+    drawing does show gets a different number elsewhere, so the presence of a
+    second value says nothing either way.
+    """
+    values = VALUES[prop]
+    carried = duct.properties.get(prop)
+    if carried is None or carried.value is None:
+        elsewhere = values[0]
+    elif carried.is_independent:
+        elsewhere = values[(values.index(carried.value) + 1) % len(values)]
+    else:
+        elsewhere = carried.value
+    drawing = drawing_lines(duct, prop, elsewhere)
+
+    obj = duct.as_dict()
+    if carried is not None and carried.is_independent and carried.value is not None:
+        by_id = {item["id"]: item["text"] for item in drawing}
+        obj["properties"][prop]["source_text"] = by_id[carried.source_id]
+    return drawing, obj
 
 
 def _record(rid: str, family: str, scenario: Scenario, split: str, panel: str) -> dict:
@@ -105,6 +142,7 @@ def _record(rid: str, family: str, scenario: Scenario, split: str, panel: str) -
         {"id": r.clause_id, "source": r.source, "page": r.page, "text": r.quote}
         for r in scenario.packet.requirements
     ]
+    drawing, obj = _lettered(scenario.duct, scenario.prop)
     return {
         "id": rid,
         "family": family,
@@ -113,14 +151,16 @@ def _record(rid: str, family: str, scenario: Scenario, split: str, panel: str) -
         "input": {
             "question": f"Does {scenario.duct.id}'s {scenario.prop.replace('_', ' ')} "
                         "meet the supplied requirement?",
-            "object": scenario.duct.as_dict(),
+            "property": scenario.prop,
+            # The structured object keeps each value's origin. It is the answer
+            # key: derive() and the scorer read it, prompt.view() withholds it.
+            "object": obj,
+            "drawing": drawing,
             "evidence": evidence,
             "documents_supplied": list(scenario.packet.sources),
             "policy": {
                 "id": scenario.packet.policy_id,
-                "text": "Review only the requested property, using only the supplied "
-                        "evidence. A value that was not read from the drawing does not "
-                        "establish what the drawing shows.",
+                "text": POLICY_TEXT,
             },
         },
         "target": {
@@ -201,7 +241,8 @@ def family_for(req: Requirement, n: int, sources: tuple[str, ...], ctx=None) -> 
 
     # The drawing says nothing.
     add(DuctObject(f"D-{k}", req.systems[0] if req.systems else ctx["system"],
-                   ctx["w"], ctx["h"], {}, element=req.element, facts=facts))
+                   ctx["w"], ctx["h"], {}, element=req.element, facts=facts,
+                   sheet=ctx["sheet"]))
 
     # Nothing supplied governs this property.
     add(_duct(k, req, ok[0] if ok else values[0], "observed", facts, ctx),
@@ -221,6 +262,32 @@ def family_for(req: Requirement, n: int, sources: tuple[str, ...], ctx=None) -> 
             add(_duct(k, req, v, "observed", facts={}, ctx=ctx))
 
     return out
+
+
+PROBE_PANEL = "curation_probe"
+
+
+def unadopted_family(req: Requirement, n: int, ctx: dict) -> list[Scenario]:
+    """One unmade choice on one run.
+
+    Whatever the drawing shows, and wherever the takeoff value came from, the
+    answer is the same: the clause has not required anything yet. Authority is
+    settled before provenance is asked.
+    """
+    fam = f"F-{req.id}-{ctx['sheet']}"
+    pkt = Packet(requirements=(req,), sources=(req.source,), policy_id="POLICY-1")
+    first, second = req.predicate["drawn_values"][:2]
+    system = req.systems[0] if req.systems else ctx["system"]
+    silent = DuctObject(f"D-{n + 4}", system, ctx["w"], ctx["h"], {},
+                        element=req.element, sheet=ctx["sheet"])
+    ducts = [
+        _duct(n, req, first, "observed", ctx=ctx),
+        _duct(n + 1, req, second, "observed", ctx=ctx),
+        _duct(n + 2, req, first, "scheduled", ctx=ctx),
+        _duct(n + 3, req, first, "copied", ctx=ctx),
+        silent,
+    ]
+    return [Scenario(fam, req, duct, pkt, req.property) for duct in ducts]
 
 
 def build(seed: int = 20261111, requirements: list[Requirement] | None = None) -> dict[str, list[dict]]:
@@ -277,6 +344,22 @@ def build(seed: int = 20261111, requirements: list[Requirement] | None = None) -
             rid = f"{req.id}-{ctx['sheet']}-{i:02d}"
             splits[split].append(_record(rid, scenario.family, scenario, split, panel))
           n += 20
+    # Unmade choices. They do not depend on which requirement set is being
+    # built, so both arms see the same ones. The probe clause goes to the test
+    # set only, in its own panel: it is the clause the raw arm was taught to
+    # treat as settled.
+    n = 2000
+    for req, is_probe in load_unadopted():
+        for ctx in CONTEXTS:
+            scenarios = unadopted_family(req, n, ctx)
+            n += 20
+            if not is_probe:
+                families.append((scenarios, "known_authority", req, ctx))
+                continue
+            for i, scenario in enumerate(scenarios):
+                rid = f"{req.id}-{ctx['sheet']}-{i:02d}"
+                splits["test"].append(_record(rid, scenario.family, scenario, "test", PROBE_PANEL))
+
     # A family's split is decided by its own name, not by its position in the
     # list. Which requirements are present changes the length of this list, and
     # an ablation where a family lands in train for one arm and dev for the
