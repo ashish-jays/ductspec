@@ -18,8 +18,9 @@ from transformers import AutoTokenizer  # noqa: E402
 from ductspec.cases import build_record  # noqa: E402
 from ductspec.clauses import parse_clauses  # noqa: E402
 from ductspec.objects import DuctObject, observed  # noqa: E402
+from ductspec.prompt import render, target as answer  # noqa: E402
 
-MODEL = "CohereLabs/tiny-aya-global"
+from ductspec.model import BASE_MODEL as MODEL  # noqa: E402
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -59,8 +60,10 @@ def main() -> None:
         scope="material", verdict="COMPLIANT", governing_ids=[evidence[0]["id"]],
         action="NONE_FOR_THIS_CHECK",
     )
-    prompt = n_tokens(tk, [{"role": "user", "content": json.dumps(rec["input"], indent=1)}])
-    target = len(tk.encode(json.dumps(rec["target"], indent=1)))
+    # The prompt and answer as training and evaluation render them. Measuring
+    # the raw record instead counted fields the model is never shown.
+    prompt = n_tokens(tk, [{"role": "user", "content": render(rec["input"])}])
+    target = len(tk.encode(answer(rec["target"])))
     print(f"packet (3 clauses): prompt={prompt} target={target} total={prompt + target}")
     print(f"suggested max_len: {max(1536, (prompt + target) + 256)}")
 

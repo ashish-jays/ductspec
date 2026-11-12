@@ -92,11 +92,13 @@ cannot be in the packet.
 
 ## The two arms
 
-`raw` and `curated` differ by exactly one requirement. Same generator, same
-seed, same family-to-split assignment, same test set, same number of records.
-The raw arm was built from the extraction before it was audited, and so
-includes UFGS 3.2.7.1 — a clause offering the engineer two materials for
-grease-laden duct, with nobody having chosen yet.
+`raw` and `curated` differ by the three requirements the curation gates
+reject. Same generator, same seed, same family-to-split assignment, same test
+set, same number of records. The raw arm was built from the extraction before
+it was audited, and so includes UFGS 3.2.7.1 (a clause offering the engineer
+two materials for grease-laden duct, with nobody having chosen yet), UFGS
+3.2.7.2 recorded for every system when it sits under "Kitchen Exhaust
+Ductwork", and UFGS 2.12.10.1, a casing gauge recorded as a duct material.
 
 Counterfactual families never straddle a split.
 """

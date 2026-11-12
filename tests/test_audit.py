@@ -63,7 +63,11 @@ def test_certifying_nothing_is_caught(rows):
     assert out["provenance_admission_error"] == 0.0
     # And useless.
     assert out["coverage"] == 0.0
-    assert out["over_refusal_rate"] > 0.5
+    # It refuses every question the evidence does answer. The rate is taken
+    # over all rows, so it equals the share of the test set that is answerable.
+    answerable = sum(r["meta"]["answer_available"] for r in rows) / len(rows)
+    assert answerable > 0.4
+    assert out["over_refusal_rate"] == pytest.approx(answerable)
     assert out["strict_accuracy"] < 0.1
 
 

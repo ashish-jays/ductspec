@@ -1,8 +1,8 @@
 """The test set asks the question the raw arm was taught the wrong answer to.
 
-The two training arms differ by one requirement: UFGS 3.2.7.1, an unmade
-choice between two materials that the raw extraction recorded as settled. An
-evaluation in which that clause never appears cannot tell the arms apart.
+The raw arm trains on UFGS 3.2.7.1 as settled: an unmade choice between two
+materials that the raw extraction recorded as a requirement. An evaluation in
+which that clause never appears cannot show what that did.
 """
 
 import importlib.util

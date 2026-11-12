@@ -174,10 +174,23 @@ def test_the_arms_differ_only_in_which_requirements_were_sound():
     raw_reqs = {r["meta"]["requirement"] for r in raw["train"]}
     cur_reqs = {r["meta"]["requirement"] for r in curated["train"]}
 
-    # Exactly one faulty requirement separates them: UFGS 3.2.7.1 offers the
-    # engineer two materials for grease-laden duct and asks them to choose.
-    assert raw_reqs - cur_reqs == {"R-UFGS-3.2.7.1-material"}
+    # The raw arm trains on three requirements the gates reject: an unmade
+    # choice recorded as settled, a kitchen-exhaust rule recorded for every
+    # system, and a casing gauge recorded as a duct material. The fourth fault
+    # is in a held-out source, which neither arm trains on.
+    assert raw_reqs - cur_reqs == {
+        "R-UFGS-3.2.7.1-material", "R-UFGS-3.2.7.2-material", "R-UFGS-2.12.10.1-material",
+    }
     assert cur_reqs - raw_reqs == set()
+
+
+def test_every_row_is_lettered_on_the_sheet_its_id_names(splits):
+    """A pointer clause's rows were all drawn on the first run whatever run
+    their id named, so two rows with different ids carried the same sheet."""
+    for rows in splits.values():
+        for row in rows:
+            sheets = {line["id"].split("-")[0] for line in row["input"]["drawing"]}
+            assert sheets == {row["id"].rsplit("-", 2)[1]}, row["id"]
 
 
 def test_a_familys_split_does_not_depend_on_what_else_was_generated():

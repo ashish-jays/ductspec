@@ -12,9 +12,9 @@
 # and checks that the document's own convention marks it as an unmade choice.
 #
 # probe: true
-#   Never trained on, in either arm. UFGS 3.2.7.1 is the one requirement that
-#   separates the raw arm from the curated arm: the raw extraction recorded it
-#   as "stainless steel, every system". Its packets go to the test set only, in
+#   Never trained on, in either arm. UFGS 3.2.7.1 is the unmade choice the
+#   raw arm trains on as settled: the raw extraction recorded it as "stainless
+#   steel, every system". Its packets go to the test set only, in
 #   their own panel, so the evaluation asks the question the raw arm was taught
 #   the wrong answer to.
 #

@@ -1,6 +1,6 @@
 """Score each model state on the curation probe panel.
 
-The probe panel shows the one clause that separates the two training arms: an
+The probe panel shows the clause the raw arm alone trains on as settled: an
 unmade choice the raw extraction recorded as a requirement. The headline
 evaluation averages it into 300-odd rows; this reads it on its own, per state,
 so the effect of curation is visible where it is expected to be.

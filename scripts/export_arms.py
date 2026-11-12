@@ -13,6 +13,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
+from ductspec.model import BASE_MODEL  # noqa: E402
 from ductspec.prompt import to_messages  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -22,10 +23,18 @@ BUILD = ROOT / "data" / "build"
 def main() -> None:
     try:
         from transformers import AutoTokenizer
-        tok = AutoTokenizer.from_pretrained("CohereLabs/tiny-aya-global")
+        tok = AutoTokenizer.from_pretrained(BASE_MODEL)
     except Exception as exc:                      # offline / ungated
         print(f"(no tokenizer: {exc}; skipping token measurement)")
         tok = None
+
+    missing = [str((BUILD / arm / f"{split}.jsonl").relative_to(ROOT))
+               for arm in ("raw", "curated") for split in ("train", "dev", "test")
+               if not (BUILD / arm / f"{split}.jsonl").exists()]
+    if missing:
+        raise SystemExit(
+            "The arms have not been built: " + ", ".join(missing)
+            + ". Run `python scripts/build_arms.py` first.")
 
     for arm in ("raw", "curated"):
         src = BUILD / arm

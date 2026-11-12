@@ -28,7 +28,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 ROOT = Path(__file__).resolve().parents[1]
-BASE = "CohereLabs/tiny-aya-global"
+ADAPTER_DIR = "final_adapter"
+from ductspec.model import BASE_MODEL as BASE, HUB_ID  # noqa: E402
 
 # Identical for both arms. Changing anything here invalidates the comparison.
 HYPERPARAMETERS = dict(
@@ -40,7 +41,10 @@ HYPERPARAMETERS = dict(
     weight_decay=0.01,
     warmup_ratio=0.03,
     lr_scheduler="cosine",
-    max_seq_length=1536,          # measured max packet is 824; this is headroom
+    # The longest training example is about 1,330 tokens once the chat
+    # template and its safety preamble are applied. export_arms.py prints
+    # the current figure; a longer example is truncated, answer first.
+    max_seq_length=1536,
     precision="bf16",
     quantization={
         "load_in_4bit": True,
@@ -112,9 +116,13 @@ def main() -> None:
     elapsed = time.time() - started
 
     trainer.tokenizer.save_pretrained(out)
+    # The trainer leaves checkpoints at save_steps and nothing at the end,
+    # so the adapter that was actually reported on had no fixed address.
+    trainer.model.save_pretrained(str(out / ADAPTER_DIR))
     (out / "run.json").write_text(json.dumps({
         "arm": args.arm,
-        "base_model": BASE,
+        "base_model": HUB_ID,
+        "base_model_loaded_from": BASE,
         "data": str(data.relative_to(ROOT)),
         "hyperparameters": {k: v for k, v in opts.items() if k != "quantization"},
         "quantization": opts["quantization"],
@@ -124,6 +132,7 @@ def main() -> None:
     }, indent=2) + "\n")
 
     print(f"\ntrained in {elapsed / 60:.1f} min -> {out}")
+    print(f"adapter: {out / ADAPTER_DIR}")
 
 
 if __name__ == "__main__":

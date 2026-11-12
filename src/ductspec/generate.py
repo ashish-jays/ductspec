@@ -178,20 +178,24 @@ def _record(rid: str, family: str, scenario: Scenario, split: str, panel: str) -
     }
 
 
-def reference_family(req: Requirement, n: int, target: Requirement | None) -> list[Scenario]:
+def reference_family(req: Requirement, n: int, target: Requirement | None,
+                     ctx: dict | None = None) -> list[Scenario]:
     """A clause that states no requirement, only a pointer to another document.
 
     The interesting pair is whether the pointed-at document is in the packet.
     Both members name the same section, so a model cannot shortcut this by
     noticing a document id — it has to notice whether the document is there.
     """
+    # One family across every run it is built on, so all of it lands in one
+    # split. The run still decides the sheet, the size and the system: a row
+    # whose id names M102 is lettered on M102.
     fam = f"F-{req.id}"
     value = THICKNESSES[-1]
     absent = Packet((req,), (req.source,), "POLICY-1")
     out = [
         # The pointer, and the section it points at is not supplied.
-        Scenario(fam, req, _duct(n, req, value, "observed"), absent, req.property),
-        Scenario(fam, req, _duct(n + 1, req, value, "copied"), absent, req.property),
+        Scenario(fam, req, _duct(n, req, value, "observed", ctx=ctx), absent, req.property),
+        Scenario(fam, req, _duct(n + 1, req, value, "copied", ctx=ctx), absent, req.property),
     ]
     if target is not None:
         # Same pointer, and now the section it points at is in the packet.
@@ -200,9 +204,9 @@ def reference_family(req: Requirement, n: int, target: Requirement | None) -> li
         failing = next((v for v in THICKNESSES if not target.satisfied_by(v)), THICKNESSES[0])
         facts = {target.condition: True} if target.condition else {}
         out += [
-            Scenario(fam, target, _duct(n + 2, target, passing, "observed", facts), present, req.property),
-            Scenario(fam, target, _duct(n + 3, target, failing, "observed", facts), present, req.property),
-            Scenario(fam, target, _duct(n + 4, target, passing, "copied", facts), present, req.property),
+            Scenario(fam, target, _duct(n + 2, target, passing, "observed", facts, ctx), present, req.property),
+            Scenario(fam, target, _duct(n + 3, target, failing, "observed", facts, ctx), present, req.property),
+            Scenario(fam, target, _duct(n + 4, target, passing, "copied", facts, ctx), present, req.property),
         ]
     return out
 
@@ -326,7 +330,7 @@ def build(seed: int = 20261111, requirements: list[Requirement] | None = None) -
                  and not t.is_reference),
                 None,
             )
-            scenarios = reference_family(req, n, target)
+            scenarios = reference_family(req, n, target, ctx)
           else:
             scenarios = family_for(req, n, sources, ctx)
 

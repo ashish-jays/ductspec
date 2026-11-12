@@ -23,7 +23,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from ductspec.prompt import render  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
-BASE = "CohereLabs/tiny-aya-global"
+from ductspec.model import BASE_MODEL as BASE, HUB_ID  # noqa: E402
 MAX_NEW_TOKENS = 160
 
 
@@ -85,7 +85,8 @@ def main() -> None:
     (out_path.with_suffix(".meta.json")).write_text(json.dumps({
         "model": args.name,
         "adapter": args.adapter,
-        "base": BASE,
+        "base": HUB_ID,
+        "base_loaded_from": BASE,
         "rows": len(rows),
         "device": device,
         "decoding": {"do_sample": False, "max_new_tokens": MAX_NEW_TOKENS},

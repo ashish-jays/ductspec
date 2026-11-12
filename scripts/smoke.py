@@ -25,7 +25,7 @@ from ductspec.parsing import parse_prediction  # noqa: E402
 from ductspec.prompt import render  # noqa: E402
 from ductspec.scoring import score_one  # noqa: E402
 
-MODEL = "CohereLabs/tiny-aya-global"
+from ductspec.model import BASE_MODEL as MODEL  # noqa: E402
 ROOT = Path(__file__).resolve().parents[1]
 
 

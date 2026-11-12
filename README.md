@@ -64,9 +64,11 @@ Three track repos, each consuming the previous one's artifact.
 
 ## The experiment
 
-Two adapters, trained on datasets that differ by **exactly one requirement**.
+Two adapters, trained on datasets that differ by **the three requirements the curation gates reject**.
 
-The raw arm was built from the extraction *before* it was audited, and so includes UFGS 3.2.7.1 — a clause offering the engineer 18 gauge stainless or 16 gauge carbon steel for grease-laden duct, with nobody having chosen yet. Everything else is identical: same generator, same seed, same family-to-split assignment, same test set, and token exposure matched to within 0.3% (prompt 133,724 vs 133,382; supervised 14,856 vs 14,810).
+The raw arm was built from the extraction *before* it was audited. It includes UFGS 3.2.7.1, a clause offering the engineer 18 gauge stainless or 16 gauge carbon steel for grease-laden duct, with nobody having chosen yet. It includes UFGS 3.2.7.2 recorded for every system, when the clause sits under "3.2.7 Kitchen Exhaust Ductwork". And it includes UFGS 2.12.10.1, a casing gauge recorded as a duct material. The curated arm is the same extraction after the gates, which reject all three (and a fourth in a held-out source that neither arm trains on). Everything else is identical: same generator, same seed, same family-to-split assignment, same test set, the same number of training records, and token exposure matched to within 1.1% (prompt 207,839 vs 208,322; supervised 15,869 vs 15,701).
+
+Until this was checked on a machine with the corpus, the arms differed by one requirement, not three. The scope gate looked for the heading above a clause among the parsed clauses, and "3.2.7 Kitchen Exhaust Ductwork" has no body, so the parser never kept it. The gate found no parent and passed. It now reads the document's table of contents, and a heading it cannot find is a rejection. With no PDF on disk every gate used to pass everything, which made the curated arm a silent copy of the raw one; that is now an error.
 
 The test set asks the question that requirement gets wrong. A `curation_probe` panel shows the model clause 3.2.7.1 itself, bracketed alternatives and all, on a kitchen exhaust duct, and the right answer is that nothing has been required yet (`APPLICABILITY_UNKNOWN`). Neither arm trains on those packets. Both arms train on four *other* unmade choices from the same section (`data/unadopted.yaml`), so a model has the chance to learn the convention. The raw arm additionally trains on 3.2.7.1 as settled law. Without this panel the two adapters were scored on a test set where the faulty clause never appeared. `python scripts/probe_report.py` scores each model state on the panel.
 
@@ -74,18 +76,18 @@ Two confounds had to be removed to get there. The raw set has more requirements 
 
 ## Metrics, and why no single one is the headline
 
-An evaluation is worth no more than its resistance to being gamed, and the cheapest way to game a grounding benchmark is to stop answering. These are the three reference behaviours scored on the same 288 rows, **before any training**:
+An evaluation is worth no more than its resistance to being gamed, and the cheapest way to game a grounding benchmark is to stop answering. These are the three reference behaviours scored on the same 333 test rows, **before any training**:
 
 | | oracle | always-compliant | always-abstain |
 |---|---|---|---|
-| strict_accuracy | **1.000** | 0.000 | 0.059 |
-| coverage | 0.549 | **1.000** | 0.000 |
+| strict_accuracy | **1.000** | 0.000 | 0.000 |
+| coverage | 0.475 | **1.000** | 0.000 |
 | unsupported_verdict_rate | **0.000** | 1.000 | **0.000** |
-| false_approval_rate | **0.000** | 0.670 | **0.000** |
-| provenance_admission_error | **0.000** | 0.379 | **0.000** |
-| over_refusal_rate | **0.000** | 0.000 | 0.549 |
-| citation_exact | **1.000** | 0.059 | 0.059 |
-| abstention_reason_accuracy | **1.000** | 0.000 | 0.131 |
+| false_approval_rate | **0.000** | 0.715 | **0.000** |
+| provenance_admission_error | **0.000** | 0.381 | **0.000** |
+| over_refusal_rate | **0.000** | 0.000 | 0.475 |
+| citation_exact | **1.000** | 0.186 | 0.186 |
+| abstention_reason_accuracy | **1.000** | 0.000 | 0.097 |
 
 A model that certifies nothing scores **perfectly on all three headline safety numbers** and is useless. A model that certifies everything scores perfectly on coverage and is wrong about everything else. Any number a trained model earns is read against these.
 
@@ -128,15 +130,16 @@ uv pip install -e ".[dev]"
 
 python -m ductspec.sources            # fetch and sha256-freeze the corpus
 python -m ductspec.generate           # build the dataset
+python scripts/build_arms.py          # the raw and curated arms, and what the gates rejected
 python scripts/export_arms.py         # conversational JSONL per arm
 python scripts/baselines.py           # the three reference behaviours
-pytest -q                             # 70 tests
+pytest -q                             # 132 tests
 ```
 
 Training and evaluation:
 
 ```bash
-python scripts/train.py curated       # one arm; run twice
+python scripts/train.py curated       # one arm; run twice -> data/adapters/<arm>/final_adapter
 python scripts/predict.py base        # generate, keep every generation
 python scripts/evaluate.py            # score all states through AuditKIT
 python scripts/roi.py --volume 100000
