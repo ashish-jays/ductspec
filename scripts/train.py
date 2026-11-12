@@ -116,9 +116,6 @@ def main() -> None:
     elapsed = time.time() - started
 
     trainer.tokenizer.save_pretrained(out)
-    # The trainer leaves checkpoints at save_steps and nothing at the end,
-    # so the adapter that was actually reported on had no fixed address.
-    trainer.model.save_pretrained(str(out / ADAPTER_DIR))
     (out / "run.json").write_text(json.dumps({
         "arm": args.arm,
         "base_model": HUB_ID,
@@ -132,6 +129,11 @@ def main() -> None:
     }, indent=2) + "\n")
 
     print(f"\ntrained in {elapsed / 60:.1f} min -> {out}")
+
+    # The trainer leaves checkpoints at save_steps and nothing at the end, so
+    # the adapter that was actually reported on had no fixed address. Saved
+    # after run.json, so the record of the run exists whatever happens here.
+    trainer.model.save_pretrained(str(out / ADAPTER_DIR))
     print(f"adapter: {out / ADAPTER_DIR}")
 
 

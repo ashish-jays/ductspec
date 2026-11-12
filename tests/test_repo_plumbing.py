@@ -139,3 +139,43 @@ def test_the_base_model_can_be_read_from_a_local_copy(monkeypatch):
 def test_no_script_writes_the_model_id_out_again():
     for path in sorted((ROOT / "scripts").glob("*.py")):
         assert model.HUB_ID not in path.read_text(encoding="utf-8"), path.name
+
+
+# --- found in review ----------------------------------------------------------
+
+@pytest.mark.parametrize("then", [remove_observation, lambda rec: strip_provenance(rec, "C-1")])
+def test_a_case_with_an_injected_note_can_still_be_perturbed_again(then):
+    rec = then(inject_instruction(_base()))
+    obj = rec["input"]["object"]
+    assert shown_for(rec["input"]["drawing"], obj["id"], obj["system"]) == []
+    assert prompt.render(rec["input"])
+
+
+def test_taking_a_value_off_a_sheet_whose_number_has_a_hyphen_keeps_one_tag():
+    duct = DuctObject(
+        "D-100", "supply_air", 20, 12,
+        {"material": observed("galvanized_steel", "D-100", sheet="M-101")}, sheet="M-101",
+    )
+    rec = remove_observation(build_record(
+        "P2", "q", duct, [CLAUSE], POLICY, scope="material", verdict="COMPLIANT",
+        governing_ids=["C-1"], action="NONE_FOR_THIS_CHECK",
+    ))
+    assert [line["id"] for line in rec["input"]["drawing"]] == ["M-101-tag-D-100"]
+
+
+def test_export_checks_for_the_arms_before_it_loads_a_tokenizer(monkeypatch, tmp_path, capsys):
+    import sys
+    import types
+
+    class Tokenizer:
+        @staticmethod
+        def from_pretrained(*args, **kwargs):
+            raise RuntimeError("the tokenizer was loaded with nothing to export")
+
+    monkeypatch.setitem(sys.modules, "transformers", types.SimpleNamespace(AutoTokenizer=Tokenizer))
+    export = _script("export_arms")
+    monkeypatch.setattr(export, "BUILD", tmp_path)
+    monkeypatch.setattr(export, "ROOT", tmp_path)
+    with pytest.raises(SystemExit):
+        export.main()
+    assert "tokenizer" not in capsys.readouterr().out

@@ -176,3 +176,45 @@ def test_a_document_that_parses_to_nothing_fails_too(monkeypatch):
     monkeypatch.setattr(curate_module, "parse_clauses", lambda *a, **k: [])
     with pytest.raises(CorpusMissing, match="parsed to no clauses"):
         curate(load(RAW), CURATED_GATES)
+
+
+# --- scope: the cases a first version of the gate let through -----------------
+
+def _scoped(requirement_id, **changes):
+    raw = {r.id: r for r in load(AUDITED)}
+    sample = to_samples([raw[requirement_id]])[0]
+    sample.metadata.update(changes)
+    return sample
+
+
+@pytest.mark.parametrize("systems", [
+    ["kitchen_exhaust", "supply_air"],
+    ["kitchen_exhaust", "supply_air", "return_air", "general_exhaust", "lab_exhaust"],
+    ["supply_air"],
+    [],
+])
+def test_naming_the_right_system_among_others_is_still_too_wide(systems):
+    passed, rejected = InheritedScopeGate().run([_scoped("R-UFGS-3.2.7.2-material", systems=systems)])
+    assert passed == []
+    assert rejected[0].rejection_reason.endswith("needs_system=kitchen_exhaust")
+
+
+@pytest.mark.parametrize("element", ["duct", "ductwork", "underground_duct", "acoustical_liner", ""])
+def test_only_a_plenum_or_casing_can_sit_under_a_plenum_and_casing_heading(element):
+    passed, rejected = InheritedScopeGate().run([_scoped("R-UFGS-2.12.10.1-material", element=element)])
+    assert passed == []
+    assert rejected[0].rejection_reason.endswith(f"element={element}")
+
+
+def test_the_unmade_choices_are_held_to_the_same_citation_and_scope_gates():
+    """They are shown to the model as evidence in both arms, so a wrong page,
+    a paraphrased quote or a scope wider than the heading matters there too.
+    The adoption gate is the one they are meant to fail."""
+    from ductspec.requirements import load_unadopted
+
+    samples = to_samples([req for req, _ in load_unadopted()])
+    for gate in (ClauseExistsGate(), QuoteFidelityGate(), InheritedScopeGate()):
+        samples, rejected = gate.run(samples)
+        assert rejected == [], [(r.metadata["requirement_id"], r.rejection_reason) for r in rejected]
+    _, not_adopted = OperativeClauseGate().run(samples)
+    assert len(not_adopted) == len(load_unadopted())

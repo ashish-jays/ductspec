@@ -14,6 +14,7 @@ model now owes.
 from __future__ import annotations
 
 import copy
+import re
 
 from .drawing import SYSTEM_ABBREV, lines as drawing_lines, shown_for
 from .objects import DuctObject
@@ -66,6 +67,10 @@ def _observation_ids(duct: DuctObject, scope: str) -> list[str]:
     return [prop.source_id]
 
 
+# A drawing line id is the sheet, then what kind of line it is.
+_SHEET = re.compile(r"^(.+?)-(?:tag-|note\d|duct-schedule-)")
+
+
 def _take_off_the_sheet(rec: dict) -> None:
     """Remove every line that letters a value against this duct, leaving its tag.
 
@@ -74,7 +79,7 @@ def _take_off_the_sheet(rec: dict) -> None:
     """
     obj, drawing = rec["input"]["object"], rec["input"]["drawing"]
     shown = set(shown_for(drawing, obj["id"], obj["system"]))
-    sheet = drawing[0]["id"].split("-")[0]
+    sheet = _SHEET.match(drawing[0]["id"]).group(1)
     tag_id = f"{sheet}-tag-{obj['id']}"
     kept = [line for line in drawing if line["id"] not in shown]
     if not any(line["id"] == tag_id for line in kept):

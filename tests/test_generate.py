@@ -157,6 +157,12 @@ def test_authority_is_settled_before_provenance_is_asked(splits):
 
 # --- the two training arms --------------------------------------------------
 
+needs_corpus = pytest.mark.skipif(
+    not (Path(__file__).resolve().parents[1] / "data" / "sources" / "UFGS-23-30-00.pdf").exists(),
+    reason="run ductspec.sources first")
+
+
+@needs_corpus
 def test_the_arms_differ_only_in_which_requirements_were_sound():
     """The ablation. Same generator, same seed, same family-to-split
     assignment, same test set, same number of training records — the only
@@ -193,6 +199,7 @@ def test_every_row_is_lettered_on_the_sheet_its_id_names(splits):
             assert sheets == {row["id"].rsplit("-", 2)[1]}, row["id"]
 
 
+@needs_corpus
 def test_a_familys_split_does_not_depend_on_what_else_was_generated():
     """A family lands in the same split whichever arm is being built. Otherwise
     the ablation measures the shuffle."""

@@ -42,7 +42,7 @@ unadopted:
     clause_id: 3.2.7.3
     page: 80
     property: material
-    applies_to: {systems: [], element: concealed_moisture_duct}
+    applies_to: {systems: [kitchen_exhaust], element: concealed_moisture_duct}
     probe: false
     drawn_values: [stainless_steel_304, galvanized_steel]
     quote: "Fabricate concealed ducts conveying moisture laden air from minimum [ 1.3 mm 18 gauge , Type 300 series, stainless steel] [ 1.6 mm 16 gauge , galvanized steel] [ 0.55 mm 16 ounce , tempered copper sheet]."

@@ -21,13 +21,6 @@ BUILD = ROOT / "data" / "build"
 
 
 def main() -> None:
-    try:
-        from transformers import AutoTokenizer
-        tok = AutoTokenizer.from_pretrained(BASE_MODEL)
-    except Exception as exc:                      # offline / ungated
-        print(f"(no tokenizer: {exc}; skipping token measurement)")
-        tok = None
-
     missing = [str((BUILD / arm / f"{split}.jsonl").relative_to(ROOT))
                for arm in ("raw", "curated") for split in ("train", "dev", "test")
                if not (BUILD / arm / f"{split}.jsonl").exists()]
@@ -35,6 +28,13 @@ def main() -> None:
         raise SystemExit(
             "The arms have not been built: " + ", ".join(missing)
             + ". Run `python scripts/build_arms.py` first.")
+
+    try:
+        from transformers import AutoTokenizer
+        tok = AutoTokenizer.from_pretrained(BASE_MODEL)
+    except Exception as exc:                      # offline / ungated
+        print(f"(no tokenizer: {exc}; skipping token measurement)")
+        tok = None
 
     for arm in ("raw", "curated"):
         src = BUILD / arm

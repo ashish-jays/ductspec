@@ -250,10 +250,10 @@ class InheritedScopeGate(BaseGate):
     """
 
     name = "inherited_scope"
-    # heading word -> the system a requirement under it must be limited to
+    # heading word -> the only system a requirement under it may list
     SYSTEM_WORDS = {"kitchen": "kitchen_exhaust", "grease": "kitchen_exhaust"}
-    # heading word -> the element a requirement under it cannot be recorded as
-    COMPONENT_WORDS = {"plenum": "duct", "casing": "duct"}
+    # heading word -> the elements a requirement under it may be recorded against
+    COMPONENT_WORDS = {"plenum": {"plenum_or_casing"}, "casing": {"plenum_or_casing"}}
 
     def _fault(self, sample: DataSample, lineage: list[tuple[str, str]]) -> str | None:
         systems, element = sample.metadata["systems"], sample.metadata["element"]
@@ -262,10 +262,12 @@ class InheritedScopeGate(BaseGate):
             words |= {w[:-1] for w in words if w.endswith("s")}
             where = f"{hid}_{title[:40]!r}"
             for word, system in self.SYSTEM_WORDS.items():
-                if word in words and system not in systems:
+                # Listing the right system among others is still wider than
+                # the heading; an empty list means every system.
+                if word in words and set(systems) != {system}:
                     return f"scope_wider_than_heading:{where}:needs_system={system}"
-            for word, wrong in self.COMPONENT_WORDS.items():
-                if word in words and element == wrong:
+            for word, allowed in self.COMPONENT_WORDS.items():
+                if word in words and element not in allowed:
                     return f"scope_wider_than_heading:{where}:element={element}"
         return None
 

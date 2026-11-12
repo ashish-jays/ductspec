@@ -66,7 +66,9 @@ Three track repos, each consuming the previous one's artifact.
 
 Two adapters, trained on datasets that differ by **the three requirements the curation gates reject**.
 
-The raw arm was built from the extraction *before* it was audited. It includes UFGS 3.2.7.1, a clause offering the engineer 18 gauge stainless or 16 gauge carbon steel for grease-laden duct, with nobody having chosen yet. It includes UFGS 3.2.7.2 recorded for every system, when the clause sits under "3.2.7 Kitchen Exhaust Ductwork". And it includes UFGS 2.12.10.1, a casing gauge recorded as a duct material. The curated arm is the same extraction after the gates, which reject all three (and a fourth in a held-out source that neither arm trains on). Everything else is identical: same generator, same seed, same family-to-split assignment, same test set, the same number of training records, and token exposure matched to within 1.1% (prompt 207,839 vs 208,322; supervised 15,869 vs 15,701).
+The raw arm was built from the extraction *before* it was audited. It includes UFGS 3.2.7.1, a clause offering the engineer 18 gauge stainless or 16 gauge carbon steel for grease-laden duct, with nobody having chosen yet. It includes UFGS 3.2.7.2 recorded for every system, when the clause sits under "3.2.7 Kitchen Exhaust Ductwork". And it includes UFGS 2.12.10.1, a casing gauge recorded as a duct material. The curated arm is the same extraction after the gates, which reject all three (and a fourth in a held-out source that neither arm trains on). What is held equal: the generator, the seed, the family-to-split assignment, the test set, the number of training records (233 each), and token exposure to within 1.1% (prompt 207,865 vs 208,358; supervised 15,869 vs 15,701).
+
+What is not equal, and cannot be while the record counts match: the raw arm spends 70 of its 233 records on the three faulty requirements, so it has 163 records on the sound ones where the curated arm has 233. And the curated arm never trains on 3.2.7.2 or 2.12.10.1 at all, because a gate can only remove a faulty requirement, not repair it. 62 of the 333 test rows are on those two clauses in their audited form. On those rows the curated arm is answering about clauses it has not seen, and the raw arm about clauses it learned with the wrong scope. A gap between the arms is the sum of these effects, not the effect of one clause.
 
 Until this was checked on a machine with the corpus, the arms differed by one requirement, not three. The scope gate looked for the heading above a clause among the parsed clauses, and "3.2.7 Kitchen Exhaust Ductwork" has no body, so the parser never kept it. The gate found no parent and passed. It now reads the document's table of contents, and a heading it cannot find is a rejection. With no PDF on disk every gate used to pass everything, which made the curated arm a silent copy of the raw one; that is now an error.
 
@@ -133,7 +135,7 @@ python -m ductspec.generate           # build the dataset
 python scripts/build_arms.py          # the raw and curated arms, and what the gates rejected
 python scripts/export_arms.py         # conversational JSONL per arm
 python scripts/baselines.py           # the three reference behaviours
-pytest -q                             # 132 tests
+pytest -q                             # 146 tests
 ```
 
 Training and evaluation:
@@ -141,6 +143,7 @@ Training and evaluation:
 ```bash
 python scripts/train.py curated       # one arm; run twice -> data/adapters/<arm>/final_adapter
 python scripts/predict.py base        # generate, keep every generation
+python scripts/predict.py curated --adapter data/adapters/curated/final_adapter
 python scripts/evaluate.py            # score all states through AuditKIT
 python scripts/roi.py --volume 100000
 ```
