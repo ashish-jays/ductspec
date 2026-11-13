@@ -85,6 +85,8 @@ def main() -> None:
     print(summary)
 
     out = ROOT / "data" / "build" / "comparison.txt"
+    # Scoring saved generations needs no build; the folder may not exist yet.
+    out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(summary + "\n")
     print(f"\n-> {out.relative_to(ROOT)}")
     return

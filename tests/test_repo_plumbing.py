@@ -179,3 +179,25 @@ def test_export_checks_for_the_arms_before_it_loads_a_tokenizer(monkeypatch, tmp
     with pytest.raises(SystemExit):
         export.main()
     assert "tokenizer" not in capsys.readouterr().out
+
+
+# --- scoring saved generations ------------------------------------------------
+
+def test_evaluating_saved_answers_needs_no_build_folder(monkeypatch, tmp_path, capsys):
+    """Scoring finished and then the run failed writing its summary, because
+    data/build is only created by a build. Evaluation reads saved answers and
+    builds nothing, so it must not depend on that folder."""
+    pytest.importorskip("auditkit")
+    evaluate = _script("evaluate")
+    rows = build()["test"][:6]
+    split = tmp_path / "rows.jsonl"
+    split.write_text("".join(json.dumps(r) + "\n" for r in rows))
+    predictions = tmp_path / "predictions"
+    predictions.mkdir()
+    (predictions / "base.jsonl").write_text("".join(
+        json.dumps({"id": r["id"], "output": json.dumps(r["target"])}) + "\n" for r in rows))
+    monkeypatch.setattr(evaluate, "ROOT", tmp_path)
+    monkeypatch.setattr(evaluate, "PREDICTIONS", predictions)
+    monkeypatch.setattr("sys.argv", ["evaluate.py", "--split", str(split), "--states", "base"])
+    evaluate.main()
+    assert (tmp_path / "data" / "build" / "comparison.txt").exists()
