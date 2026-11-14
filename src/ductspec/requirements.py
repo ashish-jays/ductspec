@@ -49,7 +49,7 @@ class Requirement:
 
 
 def load(path: Path = REQUIREMENTS) -> list[Requirement]:
-    raw = yaml.safe_load(path.read_text())["requirements"]
+    raw = yaml.safe_load(path.read_text(encoding="utf-8"))["requirements"]
     out = []
     for r in raw:
         applies = r.get("applies_to", {})
@@ -64,6 +64,28 @@ def load(path: Path = REQUIREMENTS) -> list[Requirement]:
     return out
 
 
+REVIEW_QUEUE = ROOT / "data" / "review_queue.yaml"
+# A reading a second annotator disputes, or a reviewer rejects, is not used for
+# anything until a person settles it.
+HELD_BACK_STATUSES = ("disputed", "rejected")
+
+
+def held_back(path: Path = REVIEW_QUEUE) -> set[str]:
+    """Ids of extracted items that must produce no rows."""
+    entries = yaml.safe_load(path.read_text(encoding="utf-8"))["entries"]
+    return {e["id"] for e in entries if e["status"] in HELD_BACK_STATUSES}
+
+
+def validation_unadopted(path: Path = UNADOPTED) -> set[str]:
+    """Ids of unmade choices held out for validation, never trained on."""
+    return {r["id"] for r in yaml.safe_load(path.read_text(encoding="utf-8"))["unadopted"] if r.get("validation")}
+
+
+def train_only_unadopted(path: Path = UNADOPTED) -> set[str]:
+    """Ids of unmade choices that are only ever trained on."""
+    return {r["id"] for r in yaml.safe_load(path.read_text(encoding="utf-8"))["unadopted"] if r.get("train_only")}
+
+
 def load_unadopted(path: Path = UNADOPTED) -> list[tuple[Requirement, bool]]:
     """Clauses stating an unmade choice, each with whether it is a probe.
 
@@ -71,7 +93,7 @@ def load_unadopted(path: Path = UNADOPTED) -> list[tuple[Requirement, bool]]:
     predicate that derive() reads as "nothing has been required yet".
     """
     out = []
-    for r in yaml.safe_load(path.read_text())["unadopted"]:
+    for r in yaml.safe_load(path.read_text(encoding="utf-8"))["unadopted"]:
         applies = r.get("applies_to", {})
         out.append((Requirement(
             id=r["id"], source=r["source"], clause_id=r["clause_id"], page=r["page"],
