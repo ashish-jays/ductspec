@@ -125,6 +125,9 @@ def test_the_build_script_writes_both_arms(monkeypatch, tmp_path, capsys):
 # --- the base model, named once ----------------------------------------------
 
 def test_the_base_model_can_be_read_from_a_local_copy(monkeypatch):
+    # The run environment may already name a model (Kaggle sets both); this
+    # test is about the defaults, so it starts from neither.
+    monkeypatch.delenv("DUCTSPEC_BASE_HUB_ID", raising=False)
     monkeypatch.setenv("DUCTSPEC_BASE_MODEL", "/models/tiny-aya")
     reloaded = importlib.reload(model)
     try:
