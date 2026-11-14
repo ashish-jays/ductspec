@@ -130,6 +130,8 @@ def _why_not_operative(body: str, convention: Convention) -> list[str]:
         reasons.append("UNFILLED_BLANK")
     if convention.alternatives.search(body):
         reasons.append("UNRESOLVED_ALTERNATIVES")
+    if convention.deferral is not None and convention.deferral.search(body):
+        reasons.append("DEFERRED_TO_DESIGNER")
     return reasons
 
 
@@ -177,6 +179,11 @@ def parse_clauses(pdf_path: Path, source_id: str, convention: Convention = UFGS)
         return found[-1] if found else 0
 
     lines = body.split("\n")
+    # Some owner specifications have no PART lines at all and number their
+    # articles straight through ("1.1 SECTION INCLUDES", "1.4 COMPONENTS").
+    # Without a PART to anchor the first digit, a heading is real when it
+    # runs forward from the previous one.
+    has_parts = any(PART.match(line.strip()) for line in lines)
     clauses: list[Clause] = []
     current_part = ""
     current_part_no = 0
@@ -217,6 +224,8 @@ def parse_clauses(pdf_path: Path, source_id: str, convention: Convention = UFGS)
             number = tuple(int(x) for x in clause_id.split("."))
         except ValueError:
             return False
+        if not has_parts:
+            return number > last_number
         return number[0] == current_part_no and number > last_number
 
     def flush() -> None:

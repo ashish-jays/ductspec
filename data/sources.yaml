@@ -55,3 +55,47 @@ sources:
     url: https://www.wbdg.org/FFC/VA/VANCAS/VANCA230711.pdf
     split: holdout
     convention: va
+
+  # --- Other authorities, added so the model sees more than one way of writing
+  # a specification. These are owner and agency design standards in the CSI
+  # three-part format: they letter paragraphs ("1.4.A", "2.01.B"), write
+  # exceptions and system-specific rules in prose, and some still carry
+  # brackets for choices nobody has made. Unlike UFGS and VA they are not US
+  # federal works, so their text is not public domain. The dataset quotes only
+  # the short sentence each requirement rests on, with its source, clause and
+  # page, for research use; see the dataset card.
+  #
+  # split: validation holds out one whole authority, so choosing between
+  # training recipes can be judged on an issuer the model never trained on
+  # without looking at the VA test set.
+  # Ohio is the one held out: clean text, and system-specific material rules of
+  # the same kind the VA test asks about. NYCHA's text layer splits words
+  # ("rei nforcement") and it states one checkable rule, too few to choose on.
+  - id: OFCC-23-31-13
+    title: Low-Pressure Ductwork (Ohio School Design Manual, 2024)
+    publisher: Ohio Facilities Construction Commission
+    url: https://dam.assets.ohio.gov/image/upload/ofcc.ohio.gov/OSDM/Files/23_31_13-low-pressure_ductwork.pdf
+    split: validation
+    convention: csi
+    license: state agency publication; short quotes with attribution
+  - id: DARTMOUTH-23-31-13
+    title: Ductwork (Design and Construction Guidelines, January 2023)
+    publisher: Dartmouth College
+    url: https://www.dartmouth.edu/fom/docs/2023_construction_guidelines/23_31_13_ductwork.pdf
+    split: train_only
+    convention: csi
+    license: copyrighted; short quotes with attribution
+  - id: UH-23-31-13
+    title: Ductwork (Master Construction Specifications)
+    publisher: University of Houston
+    url: https://www.uh.edu/facilities-planning-construction/vendor-resources/owners-design-criteria/master-specs/pdf/23-31-13-ductwork.pdf
+    split: train_only
+    convention: csi
+    license: copyrighted; short quotes with attribution
+  - id: NYCHA-23-31-13
+    title: Metal Ducts (Design Guidelines, 2024)
+    publisher: New York City Housing Authority
+    url: https://designguidelines.nycha.info/wp-content/uploads/2024/06/23-31-13-Metal-Ducts.pdf
+    split: train_only
+    convention: csi
+    license: copyrighted; short quotes with attribution

@@ -31,7 +31,9 @@ from .objects import (
     observed,
     scheduled,
 )
-from .requirements import Requirement, load, load_unadopted
+from .requirements import (Requirement, held_back, load, load_unadopted, train_only_unadopted,
+                           validation_unadopted)
+from .sources import split_of
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "data" / "build"
@@ -78,10 +80,36 @@ CONTEXTS = (
     {"sheet": "M601", "w": 48, "h": 24, "system": "supply_air"},
 )
 
+# Further runs that are only ever trained on. They add drawings, not clauses:
+# the same requirements lettered on other sheets, with other tags, ranges and
+# notes, so that reading the sheet is cheaper to learn than recalling a family.
+# Their families are never hashed into a split, so the dev and test sets are
+# the same records with or without them; tests/test_train_contexts.py holds that.
+TRAIN_CONTEXTS = (
+    {"sheet": "M301", "w": 24, "h": 16, "system": "return_air"},
+    {"sheet": "M302", "w": 30, "h": 20, "system": "general_exhaust"},
+    {"sheet": "M401", "w": 16, "h": 8, "system": "supply_air"},
+    {"sheet": "M402", "w": 42, "h": 22, "system": "return_air"},
+    {"sheet": "M501", "w": 28, "h": 14, "system": "general_exhaust"},
+)
+
+
+def _system_for(req: Requirement, ctx: dict) -> str:
+    """The system a duct is drawn on for this requirement on this run.
+
+    A rule for several systems is drawn on each of them in turn, chosen by the
+    sheet, rather than always on the first one listed. A rule for one system
+    is drawn on that system, and a rule for every system on the run's own.
+    """
+    if not req.systems:
+        return ctx["system"]
+    sheet_number = int("".join(ch for ch in ctx["sheet"] if ch.isdigit()))
+    return req.systems[sheet_number % len(req.systems)]
+
 
 def _duct(n: int, req: Requirement, value, origin: str, facts=None, ctx=None) -> DuctObject:
     ctx = ctx or CONTEXTS[0]
-    system = req.systems[0] if req.systems else ctx["system"]
+    system = _system_for(req, ctx)
     prop: Property
     if origin == "observed":
         prop = observed(value, f"D-{n}", sheet=ctx["sheet"], note=n % 9 + 1,
@@ -244,7 +272,7 @@ def family_for(req: Requirement, n: int, sources: tuple[str, ...], ctx=None) -> 
         add(_duct(k, req, v, "default", facts, ctx))
 
     # The drawing says nothing.
-    add(DuctObject(f"D-{k}", req.systems[0] if req.systems else ctx["system"],
+    add(DuctObject(f"D-{k}", _system_for(req, ctx),
                    ctx["w"], ctx["h"], {}, element=req.element, facts=facts,
                    sheet=ctx["sheet"]))
 
@@ -269,6 +297,9 @@ def family_for(req: Requirement, n: int, sources: tuple[str, ...], ctx=None) -> 
 
 
 PROBE_PANEL = "curation_probe"
+# Rows from an authority held out for choosing between recipes. They go to the
+# dev split only, never to training or to the test set.
+AUTHORITY_PANEL = "authority_validation"
 
 
 def unadopted_family(req: Requirement, n: int, ctx: dict) -> list[Scenario]:
@@ -281,7 +312,7 @@ def unadopted_family(req: Requirement, n: int, ctx: dict) -> list[Scenario]:
     fam = f"F-{req.id}-{ctx['sheet']}"
     pkt = Packet(requirements=(req,), sources=(req.source,), policy_id="POLICY-1")
     first, second = req.predicate["drawn_values"][:2]
-    system = req.systems[0] if req.systems else ctx["system"]
+    system = _system_for(req, ctx)
     silent = DuctObject(f"D-{n + 4}", system, ctx["w"], ctx["h"], {},
                         element=req.element, sheet=ctx["sheet"])
     ducts = [
@@ -294,7 +325,8 @@ def unadopted_family(req: Requirement, n: int, ctx: dict) -> list[Scenario]:
     return [Scenario(fam, req, duct, pkt, req.property) for duct in ducts]
 
 
-def build(seed: int = 20261111, requirements: list[Requirement] | None = None) -> dict[str, list[dict]]:
+def build(seed: int = 20261111, requirements: list[Requirement] | None = None,
+          train_contexts: tuple[dict, ...] = TRAIN_CONTEXTS) -> dict[str, list[dict]]:
     """Build the splits from a requirement set.
 
     The arms differ only here. Same generator, same seed, same situations per
@@ -302,6 +334,10 @@ def build(seed: int = 20261111, requirements: list[Requirement] | None = None) -
     """
     rng = random.Random(seed)
     requirements = requirements if requirements is not None else load()
+    # Items a second reading disputes, or a reviewer rejects, are left out until
+    # a person settles them. Both arms lose the same items.
+    withheld = held_back()
+    requirements = [r for r in requirements if r.id not in withheld]
 
     # One authoritative clause per element, used as an inapplicable distractor
     # in other families.
@@ -318,8 +354,10 @@ def build(seed: int = 20261111, requirements: list[Requirement] | None = None) -
     families: list = []
     n = 100
     for req in requirements:
-        held_out = req.source.startswith("VA-")
-        panel = "transfer" if held_out else "known_authority"
+        held_out = split_of(req.source) == "holdout"
+        validation = split_of(req.source) == "validation"
+        train_only_source = split_of(req.source) == "train_only"
+        panel = "transfer" if held_out else (AUTHORITY_PANEL if validation else "known_authority")
         sources = (req.source,) if not req.is_reference else (req.source,)
 
         for ctx in (CONTEXTS if not req.is_reference else CONTEXTS[:2]):
@@ -337,8 +375,8 @@ def build(seed: int = 20261111, requirements: list[Requirement] | None = None) -
           # The split is chosen once per family, not per record. Members of a
           # family differ by one controlled change, so a twin in the test set
           # whose sibling was trained on measures recall, not reasoning.
-          if held_out:
-            split = "test"
+          if held_out or validation or train_only_source:
+            split = "test" if held_out else ("dev" if validation else "train")
           else:
             families.append((scenarios, panel, req, ctx))
             n += 20
@@ -353,10 +391,28 @@ def build(seed: int = 20261111, requirements: list[Requirement] | None = None) -
     # set only, in its own panel: it is the clause the raw arm was taught to
     # treat as settled.
     n = 2000
+    train_only = train_only_unadopted()
+    held_for_validation = validation_unadopted()
     for req, is_probe in load_unadopted():
+        assert not (is_probe and req.id in train_only), req.id
+        assert not (req.id in held_for_validation and (is_probe or req.id in train_only)), req.id
+        if req.id in withheld:
+            continue
         for ctx in CONTEXTS:
             scenarios = unadopted_family(req, n, ctx)
             n += 20
+            if req.id in held_for_validation:
+                for i, scenario in enumerate(scenarios):
+                    rid = f"{req.id}-{ctx['sheet']}-{i:02d}"
+                    splits["dev"].append(
+                        _record(rid, scenario.family, scenario, "dev", AUTHORITY_PANEL))
+                continue
+            if req.id in train_only:
+                for i, scenario in enumerate(scenarios):
+                    rid = f"{req.id}-{ctx['sheet']}-{i:02d}"
+                    splits["train"].append(
+                        _record(rid, scenario.family, scenario, "train", "known_authority"))
+                continue
             if not is_probe:
                 families.append((scenarios, "known_authority", req, ctx))
                 continue
@@ -375,6 +431,30 @@ def build(seed: int = 20261111, requirements: list[Requirement] | None = None) -
             rid = f"{req.id}-{ctx['sheet']}-{i:02d}"
             splits[split].append(_record(rid, scenario.family, scenario, split, panel))
 
+    # Train-only runs, numbered apart from everything above so that adding them
+    # moves no existing duct. Held-out sources and the probe clause are never
+    # trained on, here or anywhere. A pointer clause is left out: its family
+    # has one name across runs, so a further run would join a family that may
+    # sit in the test set.
+    reused = {c["sheet"] for c in CONTEXTS} & {c["sheet"] for c in train_contexts}
+    if reused:
+        raise ValueError(f"train-only runs reuse evaluated sheets: {sorted(reused)}")
+    n = 6000
+    extra = [(req, True) for req in requirements
+             if not req.is_reference and split_of(req.source) in ("train", "train_only")]
+    extra += [(req, False) for req, is_probe in load_unadopted()
+              if not is_probe and req.id not in train_only
+              and req.id not in held_for_validation and req.id not in withheld]
+    for req, adopted in extra:
+        for ctx in train_contexts:
+            scenarios = (family_for(req, n, (req.source,), ctx) if adopted
+                         else unadopted_family(req, n, ctx))
+            n += 20
+            for i, scenario in enumerate(scenarios):
+                rid = f"{req.id}-{ctx['sheet']}-{i:02d}"
+                splits["train"].append(
+                    _record(rid, scenario.family, scenario, "train", "known_authority"))
+
     return splits
 
 
@@ -387,7 +467,7 @@ def write(splits: dict[str, list[dict]]) -> None:
         print(f"{split:6} {len(rows):4} records  sha256:{digest}  -> {path.relative_to(ROOT)}")
 
 
-def build_arms(seed: int = 20261111) -> dict[str, dict[str, list[dict]]]:
+def build_arms(seed: int = 20261111, train_size: int | None = None) -> dict[str, dict[str, list[dict]]]:
     """The two training arms, and the shared evaluation set.
 
     Both arms train on data generated from their own requirement set. Both are
@@ -411,6 +491,12 @@ def build_arms(seed: int = 20261111) -> dict[str, dict[str, list[dict]]]:
     # arms are truncated to the smaller count, deterministically, after a
     # shuffle seeded identically — so the difference between them is which
     # requirements were considered sound, and nothing else.
+    if train_size is not None:
+        # Chosen by ductspec.sample: the same answer mix in both arms, coverage
+        # of every requirement before repetition. See that module.
+        from .sample import balanced
+
+        raw_train, cur_train = balanced(raw_train, train_size), balanced(cur_train, train_size)
     n = min(len(raw_train), len(cur_train))
     for rows in (raw_train, cur_train):
         random.Random(seed).shuffle(rows)

@@ -37,11 +37,11 @@ def load_measurements() -> dict:
         "training_hours": None, "prompt_tokens": None, "output_tokens": None,
     }
     if meta.exists():
-        m = json.loads(meta.read_text())
+        m = json.loads(meta.read_text(encoding="utf-8"))
         out["tokens_per_second"] = m["tokens_per_second"]
         out["output_tokens"] = m["generated_tokens"] / m["rows"]
     if run.exists():
-        r = json.loads(run.read_text())
+        r = json.loads(run.read_text(encoding="utf-8"))
         out["training_hours"] = r["wall_clock_seconds"] / 3600
         out["gpu_hourly_usd"] = r.get("gpu_hourly_usd", 0.80)
 

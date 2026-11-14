@@ -13,7 +13,9 @@ from dataclasses import dataclass, field
 
 from .schema import INDEPENDENT_ORIGINS, ORIGINS, PROPERTIES
 
-SYSTEMS = ("supply_air", "return_air", "general_exhaust", "kitchen_exhaust", "lab_exhaust")
+SYSTEMS = ("supply_air", "return_air", "general_exhaust", "kitchen_exhaust", "lab_exhaust",
+           # Systems other authorities write separate rules for (dataset v2).
+           "relief_air", "shower_exhaust", "dishwasher_exhaust")
 
 
 @dataclass

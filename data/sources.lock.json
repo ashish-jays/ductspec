@@ -1,4 +1,28 @@
 {
+  "DARTMOUTH-23-31-13": {
+    "bytes": 319311,
+    "convention": "csi",
+    "sha256": "365ab55311f8f365d2e35d154c0cddd792b0e32dad5bb7c12155a9ef977e6722",
+    "split": "train",
+    "title": "Ductwork (Design and Construction Guidelines, January 2023)",
+    "url": "https://www.dartmouth.edu/fom/docs/2023_construction_guidelines/23_31_13_ductwork.pdf"
+  },
+  "NYCHA-23-31-13": {
+    "bytes": 480104,
+    "convention": "csi",
+    "sha256": "61b23ea2203372d388c141a34c630c3de7785ac3ef1b189e962943982d1ead91",
+    "split": "validation",
+    "title": "Metal Ducts (Design Guidelines, 2024)",
+    "url": "https://designguidelines.nycha.info/wp-content/uploads/2024/06/23-31-13-Metal-Ducts.pdf"
+  },
+  "OFCC-23-31-13": {
+    "bytes": 20269,
+    "convention": "csi",
+    "sha256": "fc3c2b5582f72b60533a8f2093d8932972c85a58d5feeb86b2408658c62395c7",
+    "split": "train",
+    "title": "Low-Pressure Ductwork (Ohio School Design Manual, 2024)",
+    "url": "https://dam.assets.ohio.gov/image/upload/ofcc.ohio.gov/OSDM/Files/23_31_13-low-pressure_ductwork.pdf"
+  },
   "UFGS-22-00-00": {
     "bytes": 482592,
     "convention": "ufgs",
@@ -38,6 +62,14 @@
     "split": "train",
     "title": "HVAC Air Distribution",
     "url": "https://www.wbdg.org/FFC/DOD/UFGS/UFGS%2023%2030%2000.pdf"
+  },
+  "UH-23-31-13": {
+    "bytes": 161204,
+    "convention": "csi",
+    "sha256": "9f6e9443facfa81d83810ab6b88fc834d6e1176f66894420b1cc847c49befba5",
+    "split": "train",
+    "title": "Ductwork (Master Construction Specifications)",
+    "url": "https://www.uh.edu/facilities-planning-construction/vendor-resources/owners-design-criteria/master-specs/pdf/23-31-13-ductwork.pdf"
   },
   "VA-23-07-11": {
     "bytes": 104953,

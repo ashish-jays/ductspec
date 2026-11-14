@@ -27,6 +27,9 @@ SYSTEM_ABBREV = {
     "general_exhaust": "EA",
     "kitchen_exhaust": "KEF",
     "lab_exhaust": "LEF",
+    "relief_air": "RLA",
+    "shower_exhaust": "SHX",
+    "dishwasher_exhaust": "DWX",
 }
 SYSTEM_NAME = {
     "supply_air": "SUPPLY AIR",
@@ -34,6 +37,9 @@ SYSTEM_NAME = {
     "general_exhaust": "GENERAL EXHAUST",
     "kitchen_exhaust": "KITCHEN EXHAUST",
     "lab_exhaust": "LAB EXHAUST",
+    "relief_air": "RELIEF AIR",
+    "shower_exhaust": "SHOWER EXHAUST",
+    "dishwasher_exhaust": "DISHWASHER EXHAUST",
 }
 STYLES = ("tag", "range", "general_note")
 DISTRACTORS = ("none", "other_duct", "other_range", "other_system")

@@ -28,6 +28,7 @@ from pypdf import PdfReader
 from .clauses import Clause, parse_clauses, toc_entries
 from .conventions import BY_NAME, Convention
 from .requirements import Requirement, load
+from .sources import convention_of
 
 ROOT = Path(__file__).resolve().parents[2]
 SOURCES = ROOT / "data" / "sources"
@@ -85,7 +86,7 @@ class Corpus:
 
     @staticmethod
     def convention(source: str) -> Convention:
-        return BY_NAME["va" if source.startswith("VA-") else "ufgs"]
+        return BY_NAME[convention_of(source)]
 
     def _pdf(self, source: str) -> Path:
         pdf = SOURCES / f"{source}.pdf"
@@ -197,6 +198,8 @@ class OperativeClauseGate(BaseGate):
                 problems.append("UNRESOLVED_ALTERNATIVES")
             if convention.blank.search(quote):
                 problems.append("UNFILLED_BLANK")
+            if convention.deferral is not None and convention.deferral.search(quote):
+                problems.append("DEFERRED_TO_DESIGNER")
             if problems:
                 rejected.append(_reject(
                     s, f"requirement_not_adopted:{','.join(problems)}", self.name))

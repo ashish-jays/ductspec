@@ -17,13 +17,20 @@ from ductspec.generate import ROOT, build_arms, write_arms  # noqa: E402
 from ductspec.requirements import load  # noqa: E402
 
 
-def main() -> None:
+def main(argv: list[str] | None = None) -> None:
+    import argparse
+
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--train-size", type=int, default=None,
+                    help="choose this many training rows per arm with ductspec.sample; "
+                         "default: every row, both arms cut to the smaller count")
+    args = ap.parse_args(argv)
     _, rejected = curate(load(ROOT / "data" / "requirements.raw.yaml"), CURATED_GATES)
     print(f"gates rejected {len(rejected)} raw requirement(s):")
     for r in rejected:
         print(f"  {r.metadata['requirement_id']:28} {r.rejecting_step:18} {r.rejection_reason}")
     print()
-    write_arms(build_arms())
+    write_arms(build_arms(train_size=args.train_size))
 
 
 if __name__ == "__main__":
