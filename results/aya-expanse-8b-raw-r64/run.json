@@ -1,0 +1,75 @@
+{
+  "arm": "raw",
+  "base_model": "CohereForAI/aya-expanse-8b",
+  "base_model_loaded_from": "/kaggle/input/models/cohereforai/aya-expanse/transformers/8b/5",
+  "data": "data/build/messages/raw",
+  "hyperparameters": {
+    "backend": "trl",
+    "num_epochs": 4,
+    "batch_size": 1,
+    "gradient_accumulation_steps": 8,
+    "learning_rate": 0.0002,
+    "weight_decay": 0.01,
+    "warmup_ratio": 0.03,
+    "lr_scheduler": "cosine",
+    "max_seq_length": 1536,
+    "use_peft": true,
+    "lora_r": 64,
+    "lora_alpha": 128,
+    "lora_dropout": 0.0,
+    "lora_target_modules": [
+      "q_proj",
+      "k_proj",
+      "v_proj",
+      "o_proj",
+      "gate_proj",
+      "up_proj",
+      "down_proj"
+    ],
+    "assistant_only_loss": true,
+    "packing": false,
+    "gradient_checkpointing": true,
+    "gradient_checkpointing_kwargs": {
+      "use_reentrant": false
+    },
+    "attn_implementation": "sdpa",
+    "seed": 42,
+    "data_seed": 42,
+    "eval_strategy": "no",
+    "save_steps": 40,
+    "logging_steps": 5,
+    "report_to": "none",
+    "precision": "fp32",
+    "optimizer": "adamw_torch"
+  },
+  "quantization": {
+    "load_in_4bit": true,
+    "bnb_4bit_quant_type": "nf4",
+    "bnb_4bit_use_double_quant": true,
+    "bnb_4bit_compute_dtype": "float16"
+  },
+  "dtype_recast": {
+    "trainable_to_fp32": 0,
+    "frozen_to_16bit": 1,
+    "linear4bit": 224
+  },
+  "dtypes": {
+    "trainable": {
+      "torch.float32": 448
+    },
+    "frozen": {
+      "torch.float16": 1,
+      "torch.uint8": 224,
+      "torch.float32": 33
+    },
+    "buffers": {
+      "torch.float32": 2
+    },
+    "linear4bit_compute": {
+      "torch.float16": 224
+    }
+  },
+  "wall_clock_seconds": 3687.2,
+  "gpu": "kaggle-t4",
+  "gpu_hourly_usd": 0.0
+}

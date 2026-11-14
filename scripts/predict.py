@@ -27,17 +27,57 @@ from ductspec.model import BASE_MODEL as BASE, HUB_ID  # noqa: E402
 MAX_NEW_TOKENS = 160
 
 
-def load(adapter: str | None):
+def dtypes() -> tuple["torch.dtype", str]:
+    """The compute dtype this GPU actually has, and its name for the record.
+
+    The same pre-Ampere problem as training: Kaggle's T4 and P100 have no
+    bfloat16, and torch.cuda.is_bf16_supported() says otherwise because it
+    counts emulation. Scoring a model in a dtype the card has to emulate
+    would make the comparison measure the card.
+    """
+    if torch.cuda.is_available() and torch.cuda.get_device_capability()[0] >= 8:
+        return torch.bfloat16, "bfloat16"
+    return torch.float16, "float16"
+
+
+def load(adapter: str | None, quantize: bool = True):
+    """Load the base model, in 4-bit by default, with the adapter on top.
+
+    Quantized by default because that is how the adapter was trained, and
+    because an 8B model in 16-bit is ~16GB — more than a T4 holds before any
+    KV cache. `--no-quantize` is there for a card with room, and the choice
+    is written into the meta file either way.
+    """
     from transformers import AutoModelForCausalLM, AutoTokenizer
 
+    dtype, dtype_name = dtypes()
     tok = AutoTokenizer.from_pretrained(BASE)
-    model = AutoModelForCausalLM.from_pretrained(BASE, dtype=torch.bfloat16)
+
+    kwargs = {"dtype": dtype}
+    if quantize:
+        from transformers import BitsAndBytesConfig
+        kwargs["quantization_config"] = BitsAndBytesConfig(
+            load_in_4bit=True,
+            bnb_4bit_quant_type="nf4",
+            bnb_4bit_use_double_quant=True,
+            bnb_4bit_compute_dtype=dtype,
+        )
+        # bitsandbytes places the quantized weights itself; a later .to()
+        # on the model would undo it.
+        kwargs["device_map"] = {"": 0} if torch.cuda.is_available() else "auto"
+
+    model = AutoModelForCausalLM.from_pretrained(BASE, **kwargs)
     if adapter:
         from peft import PeftModel
         model = PeftModel.from_pretrained(model, adapter)
+
+    if quantize:
+        device = str(next(model.parameters()).device)
+        return tok, model.eval(), device, dtype_name
+
     device = "cuda" if torch.cuda.is_available() else (
         "mps" if torch.backends.mps.is_available() else "cpu")
-    return tok, model.to(device).eval(), device
+    return tok, model.to(device).eval(), device, dtype_name
 
 
 def main() -> None:
@@ -46,14 +86,19 @@ def main() -> None:
     ap.add_argument("--adapter", default=None)
     ap.add_argument("--split", default="data/build/curated/test.jsonl")
     ap.add_argument("--limit", type=int, default=None)
+    ap.add_argument("--no-quantize", action="store_true",
+                    help="load in 16-bit; the default matches training")
     args = ap.parse_args()
 
     rows = [json.loads(line) for line in (ROOT / args.split).open()]
     if args.limit:
         rows = rows[: args.limit]
 
-    tok, model, device = load(args.adapter)
-    print(f"{args.name}: {len(rows)} rows on {device}")
+    tok, model, device, dtype_name = load(
+        args.adapter, quantize=not args.no_quantize)
+    loaded_in = "16-bit" if args.no_quantize else "4-bit nf4"
+    print(f"{args.name}: {len(rows)} rows on {device} "
+          f"({loaded_in}, compute {dtype_name})")
 
     out_path = ROOT / "data" / "predictions" / f"{args.name}.jsonl"
     out_path.parent.mkdir(parents=True, exist_ok=True)
@@ -89,6 +134,8 @@ def main() -> None:
         "base_loaded_from": BASE,
         "rows": len(rows),
         "device": device,
+        "loaded_in": loaded_in,
+        "compute_dtype": dtype_name,
         "decoding": {"do_sample": False, "max_new_tokens": MAX_NEW_TOKENS},
         "wall_clock_seconds": round(elapsed, 1),
         "generated_tokens": generated_tokens,
