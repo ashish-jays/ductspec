@@ -132,7 +132,8 @@ def lines(duct: DuctObject, prop: str, elsewhere: object) -> list[dict]:
 
 _TAG = re.compile(r"^(D-\d+): \d+x\d+ (.+)$")
 _RANGE = re.compile(r"^D-(\d+) THRU D-(\d+): .+$")
-_GENERAL = re.compile(r"^ALL (.+) DUCTS: .+ U\.N\.O\.$")
+# A general note may carry a further remark after it, two spaces on.
+_GENERAL = re.compile(r"^ALL (.+?) DUCTS: .+? U\.N\.O\.(?:  .*)?$")
 _SCHEDULE = re.compile(r"^(D-\d+) \| \d+x\d+ \| .+$")
 
 

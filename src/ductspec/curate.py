@@ -19,12 +19,14 @@ general property of text.
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 from curatorkit.interfaces import BaseGate, DataSample, RejectedSample
+from pypdf import PdfReader
 
-from .clauses import parse_clauses
-from .conventions import BY_NAME
+from .clauses import Clause, parse_clauses, toc_entries
+from .conventions import BY_NAME, Convention
 from .requirements import Requirement, load
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -65,6 +67,85 @@ def _reject(sample: DataSample, reason: str, step: str) -> RejectedSample:
     )
 
 
+class CorpusMissing(RuntimeError):
+    """A source document the gates need is absent or unreadable.
+
+    Every gate here judges a requirement against the page it cites. Without the
+    document there is nothing to judge against, and a gate that passed what it
+    could not check would hand back the raw arm labelled as curated.
+    """
+
+
+class Corpus:
+    """The parsed source documents, read once and shared by the gates."""
+
+    def __init__(self) -> None:
+        self._clauses: dict[str, dict[str, Clause]] = {}
+        self._headings: dict[str, dict[str, str]] = {}
+
+    @staticmethod
+    def convention(source: str) -> Convention:
+        return BY_NAME["va" if source.startswith("VA-") else "ufgs"]
+
+    def _pdf(self, source: str) -> Path:
+        pdf = SOURCES / f"{source}.pdf"
+        if not pdf.exists():
+            raise CorpusMissing(
+                f"{pdf.name} is not in {SOURCES}. Fetch the corpus with "
+                f"`python -m ductspec.sources` before curating.")
+        return pdf
+
+    def clauses(self, source: str) -> dict[str, Clause]:
+        if source not in self._clauses:
+            parsed = parse_clauses(self._pdf(source), source, self.convention(source))
+            if not parsed:
+                raise CorpusMissing(f"{source}: the document parsed to no clauses.")
+            self._clauses[source] = {c.clause_id: c for c in parsed}
+        return self._clauses[source]
+
+    def headings(self, source: str) -> dict[str, str]:
+        """Heading titles from the document's own table of contents.
+
+        The parser keeps only clauses that have a body. A heading that exists
+        to group the clauses under it, "3.2.7 Kitchen Exhaust Ductwork", has
+        none, and is listed nowhere else.
+        """
+        if source not in self._headings:
+            reader = PdfReader(self._pdf(source))
+            self._headings[source] = toc_entries(
+                "\n".join(page.extract_text() or "" for page in reader.pages))
+        return self._headings[source]
+
+    def lineage(self, source: str, clause_id: str) -> list[tuple[str, str]] | None:
+        """The clause's own heading and every heading above it, nearest first.
+
+        Returns None when a heading above it cannot be found. A document
+        without a table of contents numbers its articles two deep and letters
+        the paragraphs, and a lettered paragraph already carries its article's
+        title, so there is nothing above it to look for.
+        """
+        clauses, headings = self.clauses(source), self.headings(source)
+        out = [(clause_id, clauses[clause_id].title)]
+        parts = clause_id.split(".")
+        for depth in range(len(parts) - 1, 1, -1):
+            hid = ".".join(parts[:depth])
+            if hid in headings:
+                out.append((hid, headings[hid]))
+            elif hid in clauses:
+                out.append((hid, clauses[hid].title))
+            elif headings or not self.convention(source).lettered_subparagraphs:
+                return None
+        return out
+
+
+CORPUS = Corpus()
+
+
+def _not_found(sample: DataSample, step: str) -> RejectedSample:
+    meta = sample.metadata
+    return _reject(sample, f"clause_not_found:{meta['source']}#{meta['clause_id']}", step)
+
+
 class ClauseExistsGate(BaseGate):
     """The cited clause must exist in the document it is cited to.
 
@@ -76,32 +157,13 @@ class ClauseExistsGate(BaseGate):
 
     name = "clause_exists"
 
-    def __init__(self) -> None:
-        self._cache: dict[str, dict[str, object]] = {}
-
-    def _clauses(self, source: str, convention: str):
-        if source not in self._cache:
-            pdf = SOURCES / f"{source}.pdf"
-            if not pdf.exists():
-                self._cache[source] = {}
-            else:
-                self._cache[source] = {
-                    c.clause_id: c for c in parse_clauses(pdf, source, BY_NAME[convention])
-                }
-        return self._cache[source]
-
     def run(self, samples: list[DataSample]) -> tuple[list[DataSample], list[RejectedSample]]:
         passed, rejected = [], []
         for s in samples:
-            source = s.metadata["source"]
-            clauses = self._clauses(source, "va" if source.startswith("VA-") else "ufgs")
-            if not clauses:                       # corpus not fetched; cannot judge
-                passed.append(s)
-            elif s.metadata["clause_id"] in clauses:
+            if s.metadata["clause_id"] in CORPUS.clauses(s.metadata["source"]):
                 passed.append(s)
             else:
-                rejected.append(_reject(
-                    s, f"clause_not_found:{source}#{s.metadata['clause_id']}", self.name))
+                rejected.append(_not_found(s, self.name))
         return passed, rejected
 
 
@@ -121,20 +183,15 @@ class OperativeClauseGate(BaseGate):
 
     name = "clause_operative"
 
-    def __init__(self) -> None:
-        self._gate = ClauseExistsGate()
-
     def run(self, samples: list[DataSample]) -> tuple[list[DataSample], list[RejectedSample]]:
         passed, rejected = [], []
         for s in samples:
             source = s.metadata["source"]
-            convention = BY_NAME["va" if source.startswith("VA-") else "ufgs"]
-            clauses = self._gate._clauses(source, convention.name)
-            clause = clauses.get(s.metadata["clause_id"]) if clauses else None
-            quote = s.metadata["quote"]
-            if clause is None:
-                passed.append(s)
+            if s.metadata["clause_id"] not in CORPUS.clauses(source):
+                rejected.append(_not_found(s, self.name))
                 continue
+            convention = CORPUS.convention(source)
+            quote = s.metadata["quote"]
             problems = []
             if convention.alternatives.search(quote):
                 problems.append("UNRESOLVED_ALTERNATIVES")
@@ -159,16 +216,13 @@ class QuoteFidelityGate(BaseGate):
 
     def __init__(self, min_overlap: float = 0.8) -> None:
         self.min_overlap = min_overlap
-        self._gate = ClauseExistsGate()
 
     def run(self, samples: list[DataSample]) -> tuple[list[DataSample], list[RejectedSample]]:
         passed, rejected = [], []
         for s in samples:
-            source = s.metadata["source"]
-            clauses = self._gate._clauses(source, "va" if source.startswith("VA-") else "ufgs")
-            clause = clauses.get(s.metadata["clause_id"]) if clauses else None
+            clause = CORPUS.clauses(s.metadata["source"]).get(s.metadata["clause_id"])
             if clause is None:
-                passed.append(s)
+                rejected.append(_not_found(s, self.name))
                 continue
             body = " ".join(clause.text.split()).lower()
             quote = " ".join(s.metadata["quote"].split()).lower()
@@ -183,34 +237,55 @@ class QuoteFidelityGate(BaseGate):
 
 
 class InheritedScopeGate(BaseGate):
-    """A clause inherits its parent heading's subject.
+    """A requirement reaches no further than the headings it sits under.
 
-    UFGS 3.2.7.2 "Exposed Ductwork" sits under "3.2.7 Ducts Conveying Smoke and
-    Grease Laden Vapors". Recording it as a rule for every system turns a
-    kitchen-exhaust requirement into a universal one.
+    UFGS 3.2.7.2 "Exposed Ductwork" sits under "3.2.7 Kitchen Exhaust
+    Ductwork". Recorded for every system, a kitchen-exhaust rule becomes a
+    universal one. UFGS 2.12.10.1 sits under "2.12.10 Plenums and Casings for
+    Field-Fabricated Units". Recorded against ducts, a casing gauge becomes a
+    duct material.
+
+    The gate knows the subjects listed below and compares only those. Each is a
+    word a heading uses and the scope a requirement under it must carry.
     """
 
     name = "inherited_scope"
-    KITCHEN_PARENTS = ("grease", "kitchen")
+    # heading word -> the only system a requirement under it may list
+    SYSTEM_WORDS = {"kitchen": "kitchen_exhaust", "grease": "kitchen_exhaust"}
+    # heading word -> the elements a requirement under it may be recorded against
+    COMPONENT_WORDS = {"plenum": {"plenum_or_casing"}, "casing": {"plenum_or_casing"}}
 
-    def __init__(self) -> None:
-        self._gate = ClauseExistsGate()
+    def _fault(self, sample: DataSample, lineage: list[tuple[str, str]]) -> str | None:
+        systems, element = sample.metadata["systems"], sample.metadata["element"]
+        for hid, title in lineage:
+            words = set(re.findall(r"[a-z]+", title.lower()))
+            words |= {w[:-1] for w in words if w.endswith("s")}
+            where = f"{hid}_{title[:40]!r}"
+            for word, system in self.SYSTEM_WORDS.items():
+                # Listing the right system among others is still wider than
+                # the heading; an empty list means every system.
+                if word in words and set(systems) != {system}:
+                    return f"scope_wider_than_heading:{where}:needs_system={system}"
+            for word, allowed in self.COMPONENT_WORDS.items():
+                if word in words and element not in allowed:
+                    return f"scope_wider_than_heading:{where}:element={element}"
+        return None
 
     def run(self, samples: list[DataSample]) -> tuple[list[DataSample], list[RejectedSample]]:
         passed, rejected = [], []
         for s in samples:
-            source = s.metadata["source"]
-            clauses = self._gate._clauses(source, "va" if source.startswith("VA-") else "ufgs")
-            parent_id = s.metadata["clause_id"].rsplit(".", 1)[0]
-            parent = clauses.get(parent_id) if clauses else None
-            if parent is None:
-                passed.append(s)
+            source, clause_id = s.metadata["source"], s.metadata["clause_id"]
+            if clause_id not in CORPUS.clauses(source):
+                rejected.append(_not_found(s, self.name))
                 continue
-            title = parent.title.lower()
-            narrow = any(word in title for word in self.KITCHEN_PARENTS)
-            if narrow and not s.metadata["systems"]:
+            lineage = CORPUS.lineage(source, clause_id)
+            if lineage is None:
                 rejected.append(_reject(
-                    s, f"scope_wider_than_parent:{parent_id}_{parent.title[:40]!r}", self.name))
+                    s, f"heading_above_not_found:{source}#{clause_id}", self.name))
+                continue
+            fault = self._fault(s, lineage)
+            if fault:
+                rejected.append(_reject(s, fault, self.name))
             else:
                 passed.append(s)
         return passed, rejected
@@ -221,9 +296,11 @@ RAW_GATES: list[BaseGate] = []
 # wrong clause id may still land on a real clause — the VA liner rule cited to
 # 2.2.B resolves to the pressure-class paragraph — and would then be rejected
 # for whatever happens to be wrong with that clause. Checking the quote first
-# names the actual fault.
+# names the actual fault. Adoption comes before scope for the same reason:
+# UFGS 3.2.7.1 is both an unmade choice and recorded too widely, and a choice
+# nobody made has no scope to get wrong.
 CURATED_GATES: list[BaseGate] = [
-    ClauseExistsGate(), QuoteFidelityGate(), InheritedScopeGate(), OperativeClauseGate(),
+    ClauseExistsGate(), QuoteFidelityGate(), OperativeClauseGate(), InheritedScopeGate(),
 ]
 
 
