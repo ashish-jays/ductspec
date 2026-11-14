@@ -1,0 +1,19 @@
+DuctSpec — 333 samples, 10 metrics
+
+metric                                      base              oracle    always-compliant      always-abstain
+------------------------------------------------------------------------------------------------------------
+strict_accuracy                           0.0270              1.0000              0.0000              0.0000
+coverage                                  0.9970              0.4745              1.0000              0.0000
+unsupported_verdict_rate                  0.9429              0.0000              1.0000              0.0000
+false_approval_rate                       0.5736              0.0000              0.7147              0.0000
+provenance_admission_error                0.3814              0.0000              0.3814              0.0000
+over_refusal_rate                         0.0000              0.0000              0.0000              0.4745
+citation_exact                            0.1922              1.0000              0.1862              0.1862
+abstention_reason_accuracy                0.0400              1.0000              0.0000              0.0971
+action_accuracy                           0.2553              1.0000              0.2853              0.0000
+schema_validity                           1.0000              1.0000              1.0000              1.0000
+
+base: run_id=63cb13f5fa22e8c8
+oracle: run_id=6bc53a1a56c4408f
+always-compliant: run_id=7d085a49e0aaf618
+always-abstain: run_id=693a8caee3630b74

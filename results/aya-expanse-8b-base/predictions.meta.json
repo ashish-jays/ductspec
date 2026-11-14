@@ -1,0 +1,17 @@
+{
+  "model": "base",
+  "adapter": null,
+  "base": "CohereForAI/aya-expanse-8b",
+  "base_loaded_from": "/kaggle/input/models/cohereforai/aya-expanse/transformers/8b/5",
+  "rows": 333,
+  "device": "cuda:0",
+  "loaded_in": "4-bit nf4",
+  "compute_dtype": "float16",
+  "decoding": {
+    "do_sample": false,
+    "max_new_tokens": 160
+  },
+  "wall_clock_seconds": 3342.9,
+  "generated_tokens": 41409,
+  "tokens_per_second": 12.39
+}

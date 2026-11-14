@@ -10,6 +10,23 @@ AuditKIT's own output; `predictions.jsonl` is every generation, so a reader
 who disagrees with a metric can recompute it. The adapter weights are 336MB
 and are not in git.
 
+## Against the untrained model
+
+The "before" is in `../aya-expanse-8b-base`, scored on the same rows under the
+same conditions, differing only by the adapter.
+
+| | Untrained | Trained | |
+|---|---|---|---|
+| Fully correct | 2.7% | **72.1%** | +69.4 |
+| Wrong approvals | 57.4% | **2.4%** | **-55.0** |
+| Unneeded refusals | 0.0% | 11.7% | +11.7 |
+| Correct citation | 19.2% | 82.9% | +63.7 |
+| Correct action | 25.5% | 73.6% | +48.1 |
+
+The untrained model refuses nothing and approves 57.4% of rows without
+support. Training cuts that to 2.4%, and the cost is 11.7 points of
+over-refusal.
+
 ## Against Tiny Aya
 
 Tiny Aya figures are the raw rank-64 row of `DuctSpec_Training_Analysis.md`.
