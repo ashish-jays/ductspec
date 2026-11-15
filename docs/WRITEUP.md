@@ -539,14 +539,6 @@ See "With more credits": a real-drawing evaluation panel labelled by an engineer
     intervals, CuratorKIT counts, error analysis), wrote this write-up, and
     published the Hugging Face artifacts.
 
-## LLM usage statement
-
-Most of the code and of this write-up were drafted with an AI assistant
-(Claude) under the team's direction: 26 of the repository's 30 commits on main
-record it as co-author. The team chose the problem, data sources and
-experiments, reviewed every change, and checked every reported number against
-the result files.
-
 ## Acknowledgements
 
 Cohere Labs for Aya Expanse; the hackathon organisers for CuratorKIT,
