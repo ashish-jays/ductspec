@@ -4,7 +4,7 @@
 
 *Lexsi AI Safety & Alignment Hackathon, Track 1 (Fine-tuning and Data Curation), problem statements 1 "Domain assistants for regulated industries" and 3 "Grounded answers and fewer hallucinations."*
 
-**Result:** on 333 frozen test cases, fine-tuning Aya Expanse 8B on CuratorKIT-curated data moved wrong approvals from **57.4% to 1.2%** of all test cases and fully correct answers from **2.7% to 91.0%**, with 1.8% unneeded refusals. [Results](#results) · [Reproduce](#reproduce) · [HF models](https://huggingface.co/collections/Sarmitha23/ductspec-models-6af98499a617ddc332645d60) · [HF datasets](https://huggingface.co/collections/Sarmitha23/ductspec-datasets-6af98452a0c754845f5b11fd)
+**Result:** on 333 frozen test cases, fine-tuning Aya Expanse 8B on CuratorKIT-curated data moved wrong approvals from **57.4% to 1.2%** of all test cases and fully correct answers from **2.7% to 91.0%**, with 1.8% unneeded refusals. **[Full write-up](docs/WRITEUP.md)** · [Results](#results) · [Reproduce](#reproduce) · [HF models](https://huggingface.co/collections/Sarmitha23/ductspec-models-6af98499a617ddc332645d60) · [HF datasets](https://huggingface.co/collections/Sarmitha23/ductspec-datasets-6af98452a0c754845f5b11fd)
 
 ---
 
