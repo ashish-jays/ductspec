@@ -32,6 +32,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 ROOT = Path(__file__).resolve().parents[1]
 ADAPTER_DIR = "final_adapter"
+from ductspec import answer_mask  # noqa: E402
 from ductspec.model import BASE_MODEL as BASE, HUB_ID  # noqa: E402
 
 # Identical for both arms. Changing anything here invalidates the comparison.
@@ -240,6 +241,11 @@ def main() -> None:
     if not isinstance(trainer.tokenizer.chat_template, str):
         trainer.tokenizer.chat_template = template
     trainer.model.config.use_cache = False
+    # Aya Expanse's template marks no answer tokens; without this the answer
+    # mask is empty. verify() stops the run unless exactly the answer is supervised.
+    print(answer_mask.mark(trainer.tokenizer), flush=True)
+    first = json.loads((data / "train.jsonl").open(encoding="utf-8").readline())["messages"]
+    print(answer_mask.verify(trainer.tokenizer, first[0]["content"], first[-1]["content"]), flush=True)
 
     # The trainable parameters have to be fp32, and on this hardware that is
     # not optional. Aya Expanse declares torch_dtype bfloat16 in its config,

@@ -25,7 +25,34 @@ _UA = "ductspec/0.1 (hackathon research; +https://github.com/ashish-jays/ductspe
 
 
 def load_manifest() -> list[dict]:
-    return yaml.safe_load(MANIFEST.read_text())["sources"]
+    return yaml.safe_load(MANIFEST.read_text(encoding="utf-8"))["sources"]
+
+
+SPLITS = ("train", "train_only", "validation", "holdout")
+
+
+def registry() -> dict[str, dict]:
+    """Every source by id: its issuer, editing convention, licence and split."""
+    out = {}
+    for s in load_manifest():
+        if s["id"] in out:
+            raise ValueError(f"{s['id']} is listed twice in {MANIFEST.name}")
+        if s.get("split") not in SPLITS:
+            raise ValueError(f"{s['id']}: split must be one of {SPLITS}, not {s.get('split')!r}")
+        out[s["id"]] = s
+    return out
+
+
+def convention_of(source_id: str) -> str:
+    """The editing convention a source uses; UFGS where the manifest says none."""
+    return registry()[source_id].get("convention", "ufgs")
+
+
+def split_of(source_id: str) -> str:
+    """train (hashed into train, dev and test by family), train_only (training
+    rows only), validation (an authority held out for choosing recipes) or
+    holdout (the VA test authority)."""
+    return registry()[source_id]["split"]
 
 
 class CorpusChanged(RuntimeError):
@@ -38,7 +65,7 @@ def verify() -> dict[str, dict]:
     UFGS and VA sections are revised in place, so a silent re-download would
     change the evidence under a dataset that is already labelled.
     """
-    lock = json.loads(LOCKFILE.read_text())
+    lock = json.loads(LOCKFILE.read_text(encoding="utf-8"))
     for sid, meta in lock.items():
         path = PDF_DIR / f"{sid}.pdf"
         if not path.exists():

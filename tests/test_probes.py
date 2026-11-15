@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-from ductspec.conventions import UFGS
+from ductspec.conventions import BY_NAME, UFGS
 from ductspec.derive import Packet, derive
 from ductspec.generate import PROBE_PANEL, build
 from ductspec.objects import DuctObject, copied_from_spec, observed
@@ -160,19 +160,39 @@ def test_each_unmade_choice_is_quoted_from_a_clause_the_document_marks_unsettled
         pytest.skip("corpus not fetched: run `python -m ductspec.sources`")
     from ductspec.clauses import parse_clauses
 
-    clauses = {c.clause_id: c for c in parse_clauses(pdf, req.source, UFGS)}
+    from ductspec.sources import convention_of
+
+    convention = BY_NAME[convention_of(req.source)]
+    clauses = {c.clause_id: c for c in parse_clauses(pdf, req.source, convention)}
     assert req.clause_id in clauses, f"{req.source} has no clause {req.clause_id}"
     clause = clauses[req.clause_id]
     assert " ".join(req.quote.split()) in " ".join(clause.text.split())
-    assert UFGS.alternatives.search(req.quote), "the quote itself must show the choice"
+    # In the issuer's own convention: brackets, or a sentence handing the
+    # choice to the designer.
+    shows_choice = convention.alternatives.search(req.quote) or (
+        convention.deferral is not None and convention.deferral.search(req.quote))
+    assert shows_choice, "the quote itself must show the choice"
     assert not clause.operative
     assert req.page == clause.page_start
 
 
 def test_no_unmade_choice_is_also_recorded_as_an_audited_requirement():
-    audited = {(r.source, r.clause_id) for r in load()}
+    """A clause can hold a settled sentence beside an unmade one: Dartmouth
+    3.2.B settles galvanized steel for supply, return and general exhaust and
+    leaves kitchen and lab ductwork to the designer. What must never happen is
+    a settled requirement and an unmade choice for the same property reaching
+    the same system, which would give one duct two contradictory answers."""
+    from ductspec.objects import SYSTEMS
+
+    def reach(r):
+        return set(r.systems) or set(SYSTEMS)
+
     for req, _ in load_unadopted():
-        assert (req.source, req.clause_id) not in audited, req.id
+        for settled in load():
+            if (settled.source, settled.clause_id, settled.property) != (req.source, req.clause_id, req.property):
+                continue
+            assert settled.quote != req.quote, req.id
+            assert settled.element != req.element or not reach(settled) & reach(req), (req.id, settled.id)
 
 
 def test_exactly_the_clause_that_separates_the_arms_is_the_probe():

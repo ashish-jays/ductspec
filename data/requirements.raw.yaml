@@ -159,3 +159,196 @@ requirements:
     applies_to: {systems: [], element: acoustical_liner}
     predicate: {op: at_least, value: 1.0}
     quote: "Rectangular Duct Liner: ASTM C1071, Type I (flexible), or Type II (board), 25 mm (one inch) minimum thickness"
+
+  # --- Other authorities (dataset v2). Added identically to the raw and the
+  # audited files: they were extracted once, with the quote checked against the
+  # page, so the two arms still differ only in the faulty UFGS requirements.
+  # Machine-extracted; each is in data/review_queue.yaml for a human to confirm.
+  #
+  # Dartmouth College, Design and Construction Guidelines 23 31 13 (Jan 2023).
+  - id: R-DART-1.4.A-pressure
+    source: DARTMOUTH-23-31-13
+    clause_id: 1.4.A
+    page: 2
+    property: pressure_rating_in_wg
+    applies_to: {systems: [], element: duct, condition: low_static_pressure_class}
+    predicate: {op: at_least, value: 2.0}
+    quote: 'Low static pressure classifications shall be constructed to minimum 2" water gauge.'
+
+  - id: R-DART-1.4.B-pressure
+    source: DARTMOUTH-23-31-13
+    clause_id: 1.4.B
+    page: 2
+    property: pressure_rating_in_wg
+    applies_to: {systems: [], element: duct, condition: medium_static_pressure_class}
+    predicate: {op: at_least, value: 4.0}
+    quote: 'Medium static pressure classifications shall be constructed to minimum 4" water gauge.'
+
+  - id: R-DART-3.2.A-pressure-supply-upstream
+    source: DARTMOUTH-23-31-13
+    clause_id: 3.2.A
+    page: 10
+    property: pressure_rating_in_wg
+    applies_to: {systems: [supply_air], element: duct, condition: upstream_of_terminal_unit}
+    predicate: {op: at_least, value: 4.0}
+    quote: 'Supply Ducts (before Air Terminal Units): 4-inch w.g.'
+
+  - id: R-DART-3.2.A-pressure-supply-downstream
+    source: DARTMOUTH-23-31-13
+    clause_id: 3.2.A
+    page: 10
+    property: pressure_rating_in_wg
+    applies_to: {systems: [supply_air], element: duct, condition: downstream_of_terminal_unit}
+    predicate: {op: at_least, value: 2.0}
+    quote: 'Supply Ducts (after Air Terminal Units): 2-inch w.g.'
+
+  - id: R-DART-3.2.A-pressure-return
+    source: DARTMOUTH-23-31-13
+    clause_id: 3.2.A
+    page: 10
+    property: pressure_rating_in_wg
+    applies_to: {systems: [return_air], element: duct}
+    predicate: {op: at_least, value: 2.0}
+    quote: 'Return Ducts (Negative Pressure): 2-inch w.g'
+
+  - id: R-DART-3.2.A-pressure-exhaust
+    source: DARTMOUTH-23-31-13
+    clause_id: 3.2.A
+    page: 10
+    property: pressure_rating_in_wg
+    applies_to: {systems: [general_exhaust], element: duct}
+    predicate: {op: at_least, value: 4.0}
+    quote: 'Exhaust Ducts (Negative Pressure): 4-inch w.g.'
+
+  - id: R-DART-3.2.B-material-supply-return
+    source: DARTMOUTH-23-31-13
+    clause_id: 3.2.B
+    page: 10
+    property: material
+    applies_to: {systems: [supply_air, return_air], element: duct}
+    predicate: {op: in, values: [galvanized_steel]}
+    quote: 'Non-lab supply and return air ductwork – galvanized steel.'
+
+  - id: R-DART-3.2.B-material-exhaust
+    source: DARTMOUTH-23-31-13
+    clause_id: 3.2.B
+    page: 10
+    property: material
+    applies_to: {systems: [general_exhaust], element: duct}
+    predicate: {op: in, values: [galvanized_steel]}
+    quote: 'Non-lab general exhaust and toilet exhaust – galvanized steel.'
+
+  - id: R-DART-2.6.A-insulation
+    source: DARTMOUTH-23-31-13
+    clause_id: 2.6.A
+    page: 5
+    property: insulation_thickness_in
+    applies_to: {systems: [], element: double_wall_duct}
+    predicate: {op: in, values: [1.0]}
+    quote: 'Insulation shall be 1" thick duct liner.'
+
+  - id: R-DART-2.6.A-material
+    source: DARTMOUTH-23-31-13
+    clause_id: 2.6.A
+    page: 5
+    property: material
+    applies_to: {systems: [], element: double_wall_inner}
+    predicate: {op: in, values: [galvanized_steel]}
+    quote: 'Inner skin shall be 26 gauge perforated galvanized steel.'
+
+  - id: R-DART-2.15.A-material
+    source: DARTMOUTH-23-31-13
+    clause_id: 2.15.A
+    page: 9
+    property: material
+    applies_to: {systems: [], element: terminal_unit_casing}
+    predicate: {op: in, values: [galvanized_steel]}
+    quote: 'Casing shall be constructed of not less than 22-gauge galvanized steel'
+
+  # University of Houston, Master Construction Specifications 23 31 13.
+  - id: R-UH-1.2.M-material
+    source: UH-23-31-13
+    clause_id: 1.2.M
+    page: 1
+    property: material
+    applies_to: {systems: [dishwasher_exhaust], element: duct}
+    predicate: {op: in, values: [stainless_steel_316, aluminum]}
+    quote: 'Dishwasher Exhaust Ductwork: Ductwork shall be welded 316L stainless steel or aluminum ductwork'
+
+  - id: R-UH-1.2.J-insulation
+    source: UH-23-31-13
+    clause_id: 1.2.J
+    page: 1
+    property: insulation_thickness_in
+    applies_to: {systems: [return_air], element: duct, condition: insulation_indicated_on_drawings}
+    predicate: {op: in, values: [1.0]}
+    quote: 'Ductwork used for return air boots and elbows and other return air ductwork where shown on the Drawings shall be shall be externally insulated with one inch (1")) insulation.'
+
+  - id: R-UH-2.4.C-insulation
+    source: UH-23-31-13
+    clause_id: 2.4.C
+    page: 4
+    property: insulation_thickness_in
+    applies_to: {systems: [], element: flexible_duct}
+    predicate: {op: in, values: [1.0]}
+    quote: 'Duct liner shall be wrapped with a nominal one inch (1") thick fiberglass insulation blanket'
+
+  # New York City Housing Authority, Design Guidelines 23 31 13 (2024).
+  - id: R-NYCHA-2.02.A-material
+    source: NYCHA-23-31-13
+    clause_id: 2.02.A
+    page: 4
+    property: material
+    applies_to: {systems: [], element: duct}
+    predicate: {op: in, values: [galvanized_steel]}
+    quote: 'Fabricate ductwork from galvanized sheet metal of the gages specified in SMACNA HVAC Duct Construction Standards Third Edition - 2005'
+
+  # Ohio Facilities Construction Commission, Ohio School Design Manual 23 31 13
+  # (2024). The validation authority: never trained on. 1.4.A writes its
+  # exceptions in prose ("except shower rooms, kitchen exhaust hoods, dishwasher
+  # exhaust and fume hood exhaust"); they are encoded as the systems it does
+  # list. 1.4.D ("16-gauge steel") is left out: it does not say which steel.
+  - id: R-OFCC-1.4.A-material
+    source: OFCC-23-31-13
+    clause_id: 1.4.A
+    page: 1
+    property: material
+    applies_to: {systems: [supply_air, return_air, relief_air, general_exhaust], element: duct}
+    predicate: {op: in, values: [galvanized_steel]}
+    quote: 'Supply air, return air, relief air and exhaust air (except shower rooms, kitchen exhaust hoods, dishwasher exhaust and fume hood exhaust) shall be galvanized steel'
+
+  - id: R-OFCC-1.4.B-material
+    source: OFCC-23-31-13
+    clause_id: 1.4.B
+    page: 1
+    property: material
+    applies_to: {systems: [lab_exhaust], element: duct}
+    predicate: {op: in, values: [stainless_steel_304, pvc_coated_galvanized]}
+    quote: 'Fume hood exhaust shall be Type 304 stainless steel or PVC -coated galvanized steel'
+
+  - id: R-OFCC-1.4.C-material
+    source: OFCC-23-31-13
+    clause_id: 1.4.C
+    page: 1
+    property: material
+    applies_to: {systems: [shower_exhaust], element: duct}
+    predicate: {op: in, values: [aluminum]}
+    quote: 'Shower exhaust ductwork shall be aluminum construction'
+
+  - id: R-OFCC-1.4.E-material
+    source: OFCC-23-31-13
+    clause_id: 1.4.E
+    page: 1
+    property: material
+    applies_to: {systems: [dishwasher_exhaust], element: duct}
+    predicate: {op: in, values: [stainless_steel_304]}
+    quote: 'Dishwasher exhaust ductwork shall be 16-gauge type 304 stainless steel'
+
+  - id: R-OFCC-1.4.F-insulation
+    source: OFCC-23-31-13
+    clause_id: 1.4.F
+    page: 1
+    property: insulation_thickness_in
+    applies_to: {systems: [], element: acoustical_liner}
+    predicate: {op: at_least, value: 1.0}
+    quote: 'Flexible duct liner shall be a minimum of 1 inch thick'

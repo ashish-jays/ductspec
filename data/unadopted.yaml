@@ -76,3 +76,117 @@ unadopted:
     probe: false
     drawn_values: [galvanized_steel, black_iron]
     quote: "Provide unit ventilators that include an enclosure, [galvanized casing,] [cold-rolled steel casing with corrosion resistant coating,] coil assembly"
+
+  # --- Train only. More unmade choices, so a model can learn the convention
+  # ("[A] [B]" means nobody has chosen) rather than recall four clause ids.
+  # train_only keeps them out of the dev and test sets, which stay the records
+  # every earlier model was scored on.
+
+  - id: U-UFGS-2.13.1.5-material
+    source: UFGS-23-30-00
+    clause_id: 2.13.1.5
+    page: 46
+    property: material
+    applies_to: {systems: [], element: wall_grille}
+    probe: false
+    train_only: true
+    drawn_values: [aluminum, stainless_steel_304]
+    quote: "Equip unit with an [aluminum or plated steel wire discharge bird screen,] [disconnect switch,] [[anodized aluminum][stainless steel] wall grille,]"
+
+  - id: U-UFGS-2.13.2-material
+    source: UFGS-23-30-00
+    clause_id: 2.13.2
+    page: 48
+    property: material
+    applies_to: {systems: [], element: coil_fins}
+    probe: false
+    train_only: true
+    drawn_values: [aluminum, galvanized_steel]
+    quote: "Provide fin-and-tube type coils constructed of seamless [copper][red brass] tubes and [aluminum][ or ][copper] fins mechanically bonded or soldered to the tubes."
+
+  - id: U-UFGS-2.13.3.6-material
+    source: UFGS-23-30-00
+    clause_id: 2.13.3.6
+    page: 52
+    property: material
+    applies_to: {systems: [], element: filter_control_box}
+    probe: false
+    train_only: true
+    drawn_values: [stainless_steel_304, galvanized_steel]
+    quote: "Each filter complete with initial loading of filter media drive motor adequate to handle the number of sections involved, and [painted steel] [stainless steel] control box"
+
+  - id: U-UFGS-2.13.3.11-material
+    source: UFGS-23-30-00
+    clause_id: 2.13.3.11
+    page: 55
+    property: material
+    applies_to: {systems: [], element: filter_gauge_tubing}
+    probe: false
+    train_only: true
+    drawn_values: [aluminum, stainless_steel_316]
+    quote: "two 1.5 m 5 foot minimum lengths of 6.35 mm 1/4 inch diameter [aluminum] [vinyl] tubing"
+
+  - id: U-UFGS-2.2.7-material
+    source: UFGS-23-07-00
+    clause_id: 2.2.7
+    page: 16
+    property: material
+    applies_to: {systems: [], element: insulation_staples}
+    probe: false
+    train_only: true
+    drawn_values: [stainless_steel_316, galvanized_steel]
+    quote: "Outward clinching type [monel] [Type 304 or 316 stainless steel]."
+
+  # --- Other authorities (dataset v2), train only. The same idea as UFGS's
+  # "[A] [B]", written by other issuers: Houston keeps brackets, Dartmouth
+  # hands the choice to the designer in prose. A model that learned "brackets
+  # mean refuse" fails the prose one; one that learned "nobody has chosen yet"
+  # gets both.
+
+  - id: U-DART-3.2.B-material
+    source: DARTMOUTH-23-31-13
+    clause_id: 3.2.B
+    page: 10
+    property: material
+    applies_to: {systems: [kitchen_exhaust, lab_exhaust], element: duct}
+    probe: false
+    train_only: true
+    drawn_values: [stainless_steel_304, black_iron]
+    quote: "Lab, Pools, Kitchen and other special applications ductwork material shall be determined by the designer."
+
+  # Held out for validation, not trained on: kitchen exhaust, a choice between
+  # stainless and black (carbon) steel, written in brackets. That is the probe
+  # clause (UFGS 3.2.7.1) in another issuer's words, and training on it would
+  # turn the probe into a test of recall.
+  - id: U-UH-1.2.L-material
+    source: UH-23-31-13
+    clause_id: 1.2.L
+    page: 1
+    property: material
+    applies_to: {systems: [kitchen_exhaust], element: duct}
+    probe: false
+    validation: true
+    drawn_values: [stainless_steel_316, black_iron]
+    quote: "Ductwork shall be welded [316L stainless] [black] steel"
+
+  - id: U-UH-1.2.O-material
+    source: UH-23-31-13
+    clause_id: 1.2.O
+    page: 1
+    property: material
+    applies_to: {systems: [lab_exhaust], element: duct}
+    probe: false
+    train_only: true
+    drawn_values: [stainless_steel_316, galvanized_steel]
+    quote: "Ductwork shall be [welded 316L stainless steel] [fiberglass reinforced plastic (FRP)] ductwork"
+
+  - id: U-UH-2.3.A-insulation
+    source: UH-23-31-13
+    clause_id: 2.3.A
+    page: 4
+    property: insulation_thickness_in
+    applies_to: {systems: [], element: acoustical_liner}
+    probe: false
+    train_only: true
+    drawn_values: [1.0, 2.0]
+    quote: "Provide Schuller Permacote Linacoustic Standard/HP or Owens-Corning Aeroflex [1/2”] [1”] [1-1/2”] [2”] thick fiberglass ductliner"

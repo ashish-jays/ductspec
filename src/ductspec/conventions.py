@@ -34,6 +34,9 @@ class Convention:
     # space ("1.1 DESCRIPTION"). Accepting one space in UFGS would swallow
     # ordinary numbered prose, so the gap is part of the convention.
     heading_gap: str = r"\s{2,}"
+    # A sentence that hands the decision to the designer in prose rather than
+    # in brackets ("material shall be determined by the designer").
+    deferral: re.Pattern | None = None
 
 
 UFGS = Convention(
@@ -58,4 +61,28 @@ VA = Convention(
     heading_gap=r"\s+",
 )
 
-BY_NAME = {c.name: c for c in (UFGS, VA)}
+# Owner and agency specifications in the CSI three-part format: a university's
+# design standard, a state school-design manual, a housing authority's
+# guidelines. They letter their paragraphs as VA does ("2.1.A"), and where they
+# still carry editing marks they borrow UFGS's brackets for choices
+# ("[316L stainless] [black] steel") and use "Insert ..." placeholders for
+# blanks. A sentence addressed to the designer ("The designer shall determine
+# ...") hands the decision over rather than stating it; such sentences are
+# recognised where requirements are extracted, not here, because they sit
+# inside ordinary paragraphs rather than in marked note blocks.
+CSI = Convention(
+    name="csi",
+    lettered_subparagraphs=True,
+    note_block=None,
+    note_marker=re.compile(r"\b(NOTE TO (DESIGNER|SPECIFIER)|SPECIFIER'?S? NOTE|DESIGNER'?S? NOTE)\b", re.I),
+    blank=re.compile(r"_{4,}|\[\s*INSERT[^\]]*\]|<\s*Insert[^>]*>", re.I),
+    alternatives=re.compile(r"\[[^\[\]]{2,200}\]\s*\[[^\[\]]{2,200}\]"),
+    optional=re.compile(r"\[[^\[\]]{2,200}\]"),
+    heading_gap=r"\s+",
+    # Any whitespace between words: a PDF line break can fall anywhere.
+    deferral=re.compile(
+        r"\b(shall\s+be\s+(determined|selected|decided)\s+by\s+the\s+(designer|engineer)"
+        r"|(designer|engineer)\s+shall\s+(determine|select|decide))\b", re.I),
+)
+
+BY_NAME = {c.name: c for c in (UFGS, VA, CSI)}

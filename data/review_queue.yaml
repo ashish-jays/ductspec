@@ -1,0 +1,167 @@
+# Requirements and unmade choices awaiting a human check.
+#
+# Every entry here was extracted by a model reading the PDF, not by a person.
+# What was checked automatically, for each one:
+#   - the clause id exists in the parsed document;
+#   - the quote appears in that clause's text (quote-fidelity gate);
+#   - the quote states no unmade choice, or states one, as recorded
+#     (operative gate, in the issuer's own convention);
+#   - its scope is no wider than the headings above it (scope gate);
+#   - the page number matches where the parser found the clause.
+#
+# What was not checked, and is the reviewer's job: whether the structured
+# reading (property, systems, element, condition, accepted values) is what the
+# sentence actually requires. Each entry names the judgement call that was made.
+#
+# status: needs_human_check | disputed | confirmed | corrected | rejected
+#   disputed: an independent second reading (a separate model, given only
+#   the clause text) disagrees. Disputed and rejected items produce no rows
+#   until a person settles them (ductspec.requirements.held_back).
+# second_reading: what that independent reading said.
+# tests/test_review_queue.py fails if a requirement from a non-federal source
+# is not listed here.
+
+reviewer_instructions: >-
+  Open the PDF at the page given, read the quoted sentence in context, and
+  confirm or correct the reading. If the reading is wrong, set status to
+  corrected and fix the entry in data/requirements.yaml and
+  data/requirements.raw.yaml (they must stay identical for these sources).
+
+entries:
+  - id: R-DART-1.4.A-pressure
+    status: needs_human_check
+    second_reading: 'agrees with the structured reading'
+    judgement: >-
+      Read as a conditional rule: it binds only where the drawing establishes a
+      low static pressure classification. A drawing that does not say gives
+      "applicability unknown". Alternative reading: every duct is at least low
+      pressure, so the rule binds everywhere.
+  - id: R-DART-1.4.B-pressure
+    status: needs_human_check
+    second_reading: 'agrees with the structured reading'
+    judgement: Same reading as 1.4.A, for the medium class (minimum 4 in.).
+  - id: R-DART-3.2.A-pressure-supply-upstream
+    status: needs_human_check
+    second_reading: 'agrees; flags exact class vs minimum as unclear'
+    judgement: >-
+      "Unless otherwise indicated" is read as a default the drawing can
+      override; the dataset never letters an override, so the default always
+      applies. Position (before terminal units) is a condition the drawing must
+      establish.
+  - id: R-DART-3.2.A-pressure-supply-downstream
+    status: needs_human_check
+    second_reading: 'agrees; flags exact class vs minimum as unclear'
+    judgement: As above, for after terminal units (minimum 2 in.).
+  - id: R-DART-3.2.A-pressure-return
+    status: needs_human_check
+    second_reading: 'agrees; asks whether "(Negative Pressure)" is a condition or a description'
+    judgement: '"2-inch w.g" read as a minimum class for return ducts.'
+  - id: R-DART-3.2.A-pressure-exhaust
+    status: disputed
+    second_reading: 'disagrees: reads "Exhaust Ducts" as every exhaust system, including kitchen and lab, not general exhaust only.'
+    judgement: >-
+      "Exhaust Ducts" read as general exhaust only. Kitchen and lab exhaust are
+      left out because 3.2.B.4 hands their material to the designer; whether
+      their pressure class is also left open is not clear from the text.
+  - id: R-DART-3.2.B-material-supply-return
+    status: needs_human_check
+    second_reading: 'agrees with the structured reading'
+    judgement: '"Non-lab" read as: every supply and return system in the dataset.'
+  - id: R-DART-3.2.B-material-exhaust
+    status: needs_human_check
+    second_reading: 'agrees with the structured reading'
+    judgement: '"Non-lab general exhaust and toilet exhaust" read as general_exhaust.'
+  - id: R-DART-2.6.A-insulation
+    status: needs_human_check
+    second_reading: 'agrees with the structured reading'
+    judgement: '"1" thick" read as exactly 1 in., not a minimum.'
+  - id: R-DART-2.6.A-material
+    status: needs_human_check
+    second_reading: 'agrees with the structured reading'
+    judgement: Inner skin of double-wall duct; gauge (26) not modelled.
+  - id: R-DART-2.15.A-material
+    status: needs_human_check
+    second_reading: 'agrees with the structured reading'
+    judgement: Terminal unit (VAV box) casing; gauge (22) not modelled.
+  - id: R-UH-1.2.M-material
+    status: needs_human_check
+    second_reading: 'agrees; asks whether "welded" also applies to the aluminum'
+    judgement: >-
+      "316L stainless steel or aluminum" read as two acceptable materials,
+      both settled (no brackets). 316L recorded as stainless_steel_316.
+  - id: R-UH-1.2.J-insulation
+    status: disputed
+    second_reading: 'disagrees: return air boots and elbows are always insulated; only "other return air ductwork" is conditional on the drawings.'
+    judgement: >-
+      "where shown on the Drawings" read as a condition the drawing must
+      establish; "one inch" read as exactly 1 in. The source repeats "shall be";
+      the quote keeps it.
+  - id: R-UH-2.4.C-insulation
+    status: needs_human_check
+    second_reading: 'agrees with the structured reading'
+    judgement: '"nominal one inch" read as exactly 1 in. for flexible duct.'
+  - id: R-NYCHA-2.02.A-material
+    status: needs_human_check
+    second_reading: 'agrees: the text excludes no system'
+    judgement: >-
+      Read as every system. The document is a boiler-plant replacement
+      specification; whether its galvanized rule was meant for kitchen or lab
+      exhaust (which it never mentions) is a reviewer's call.
+  - id: R-OFCC-1.4.A-material
+    status: needs_human_check
+    second_reading: 'agrees with the structured reading'
+    judgement: >-
+      The exception list ("except shower rooms, kitchen exhaust hoods,
+      dishwasher exhaust and fume hood exhaust") is encoded as the systems the
+      rule does name: supply, return, relief and general exhaust.
+  - id: R-OFCC-1.4.B-material
+    status: needs_human_check
+    second_reading: 'agrees with the structured reading'
+    judgement: >-
+      "Fume hood exhaust" read as lab_exhaust. Accepts Type 304 stainless or
+      PVC-coated galvanized; the second is never drawn, only accepted.
+  - id: R-OFCC-1.4.C-material
+    status: needs_human_check
+    second_reading: 'agrees with the structured reading'
+    judgement: '"Shower exhaust ductwork" read as its own system.'
+  - id: R-OFCC-1.4.E-material
+    status: needs_human_check
+    second_reading: 'agrees with the structured reading'
+    judgement: Type 304 stainless for dishwasher exhaust; gauge (16) not modelled.
+  - id: R-OFCC-1.4.F-insulation
+    status: needs_human_check
+    second_reading: 'agrees; flags "flexible duct liner" as ambiguous (liner for flexible duct, or a flexible liner in rigid duct)'
+    judgement: '"Flexible duct liner" read as duct liner (acoustical_liner), minimum 1 in.'
+  - id: U-DART-3.2.B-material
+    status: needs_human_check
+    second_reading: 'agrees with the structured reading'
+    judgement: >-
+      "shall be determined by the designer" read as an unmade choice: nothing
+      is required until the designer decides. Lab and kitchen are named;
+      "Pools" and "other special applications" have no system in the dataset.
+  - id: U-UH-1.2.L-material
+    status: needs_human_check
+    second_reading: 'agrees with the structured reading'
+    judgement: Bracketed choice between 316L stainless and black steel.
+  - id: U-UH-1.2.O-material
+    status: needs_human_check
+    second_reading: 'agrees with the structured reading'
+    judgement: Bracketed choice between welded 316L stainless and FRP.
+  - id: U-UH-2.3.A-insulation
+    status: needs_human_check
+    second_reading: 'agrees with the structured reading'
+    judgement: Bracketed choice of liner thickness (1/2, 1, 1-1/2 or 2 in.).
+
+skipped:
+  - clause: OFCC-23-31-13 1.4.D
+    reason: '"16-gauge steel" does not say which steel (carbon or stainless).'
+  - clause: UH-23-31-13 1.2.H, 1.2.I, 1.2.N, 1.2.P
+    reason: >-
+      "shall not be insulated" needs a zero-insulation value; adding one would
+      change how existing test rows are generated. Left for a later version.
+  - clause: UH-23-31-13 1.2.K, 1.2.M (insulation), 1.2.O (insulation)
+    reason: '"uninsulated, except where passing through nonconditioned spaces" needs an exception condition.'
+  - clause: DARTMOUTH-23-31-13 1.4.F, 1.4.J
+    reason: Hands the decision to the designer (sealant type, painting); no property the dataset models.
+  - clause: NYCHA-23-31-13 2.01.B
+    reason: '"constructed to the pressure shown on the Drawings" states no value of its own.'

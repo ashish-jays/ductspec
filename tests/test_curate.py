@@ -82,9 +82,10 @@ def test_gates_and_audit_disagree_and_that_is_the_finding():
     a reader with the PDF open fixed the citation and recovered the condition.
     """
     out = arms(RAW, AUDITED)
-    assert len(out["raw"]["requirements"]) == 11
-    assert len(out["curated"]["requirements"]) == 7
-    assert len(out["audited"]["requirements"]) == 10
+    federal = lambda reqs: [r for r in reqs if r.source.startswith(("UFGS-", "VA-"))]
+    assert len(federal(out["raw"]["requirements"])) == 11
+    assert len(federal(out["curated"]["requirements"])) == 7
+    assert len(federal(out["audited"]["requirements"])) == 10
 
     curated_ids = {r.id for r in out["curated"]["requirements"]}
     audited_ids = {r.id for r in out["audited"]["requirements"]}
@@ -218,3 +219,25 @@ def test_the_unmade_choices_are_held_to_the_same_citation_and_scope_gates():
         assert rejected == [], [(r.metadata["requirement_id"], r.rejection_reason) for r in rejected]
     _, not_adopted = OperativeClauseGate().run(samples)
     assert len(not_adopted) == len(load_unadopted())
+
+
+# --- other authorities (dataset v2) ------------------------------------------
+
+def test_requirements_from_other_authorities_are_the_same_in_both_files_and_pass_every_gate():
+    """They were extracted once, with the quote checked against the page, so
+    they must not separate the arms: the arms differ only in the faulty UFGS
+    requirements."""
+    other = lambda reqs: {r.id: r for r in reqs if not r.source.startswith(("UFGS-", "VA-"))}
+    raw, audited = other(load(RAW)), other(load(AUDITED))
+    assert raw and raw == audited
+    kept, rejected = curate(list(raw.values()), CURATED_GATES)
+    assert rejected == [], [(r.metadata["requirement_id"], r.rejection_reason) for r in rejected]
+    assert len(kept) == len(raw)
+
+
+def test_a_choice_handed_to_the_designer_in_prose_is_not_adopted():
+    from ductspec.requirements import load_unadopted
+
+    deferred = [r for r, _ in load_unadopted() if r.id == "U-DART-3.2.B-material"]
+    _, rejected = OperativeClauseGate().run(to_samples(deferred))
+    assert [r.rejection_reason for r in rejected] == ["requirement_not_adopted:DEFERRED_TO_DESIGNER"]
