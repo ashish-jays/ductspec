@@ -452,6 +452,11 @@ These are expectations, not results.
 
 ## Documentation and reproduction
 
+The repository README gives reproduction in three checked levels: rescoring
+the committed results without a GPU (reproduces every reported number),
+rebuilding the data (row for row identical to what was trained), and
+retraining on one T4: https://github.com/ashish-jays/ductspec#reproduce
+
 **Environment:** Python 3.11+, `pip install -e ".[dev,train]"`, one 16 GB GPU (a T4 is enough), access to Aya Expanse 8B.
 
 **Repo layout:**
