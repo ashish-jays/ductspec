@@ -213,7 +213,7 @@ Compute: curated 334 min and raw 303 min of training on one T4 each (Kaggle free
 | All artifacts on Hugging Face | adapters, datasets, generations, logs and analysis in public collections: [models](https://huggingface.co/collections/Sarmitha23/ductspec-models-6af98499a617ddc332645d60), [datasets](https://huggingface.co/collections/Sarmitha23/ductspec-datasets-6af98452a0c754845f5b11fd) |
 | Deployed publicly | this repository and the Hugging Face collections |
 | Before-and-after metrics, more than one | untrained / raw / curated across ten AuditKIT metrics on one frozen test set, with 95% bootstrap intervals |
-| Write-up | HF Article; this README as fallback |
+| Write-up | [docs/WRITEUP.md](docs/WRITEUP.md), linked from this README (HF Articles need PRO or a Team organisation; the rules accept a README) |
 | ROI comparison *(optional)* | in the write-up, from measured throughput and training time |
 | Originality | own work, built during the hackathon window, public specifications only |
 
