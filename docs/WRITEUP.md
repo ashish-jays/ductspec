@@ -498,7 +498,12 @@ rerunning them.
 
 ## Declaration of work done outside the hackathon
 
-[[TO FILL: list anything that existed before the hackathon start date, or state that all work was done during the hackathon]]
+All code, data and results in this submission were produced in this project's
+repository, which was started on 10 November 2026; no part of the work
+predates it. Used from third parties, not developed by us: the public
+specification documents (UFGS, VA, Ohio OFCC, Dartmouth, University of
+Houston, NYCHA), the hackathon kits (CuratorKIT, AlignTune, AuditKIT), and the
+Aya Expanse 8B base model.
 
 ## Discussion: what we learned
 
@@ -518,12 +523,29 @@ See "With more credits": a real-drawing evaluation panel labelled by an engineer
 
 ## Team
 
-- **Teammates:** [[TO FILL: HF usernames]]
-- **Author contributions:** [[TO FILL]]
+- **Teammates:** Sarmitha Sivashanmugam (GitHub: sarmitha-sivashanmugam, HF: Sarmitha23) · Ashish (GitHub: ashish-jays)
+- **Author contributions:**
+  - **Ashish** built the foundation: the frozen specification corpus and clause
+    parser, the requirement extraction, the oracle and case generator, the
+    CuratorKIT gates, AuditKIT scoring, the first dataset (v1), the first 8B
+    training run on it, the untrained 8B baseline, and the fp16 fixes for T4 GPUs.
+  - **Together**, from the v1 results (strong on UFGS, weak on VA, wrong
+    approvals concentrated on the probe), we decided the model needed more
+    varied data.
+  - **Sarmitha** built dataset v2 (four new issuers, the CSI clause format,
+    the balanced sampler, the leakage and near-duplicate checks, the review
+    queue), the answer-only training fix, trained and evaluated the v2 raw and
+    curated models and the prompted baseline, ran the analysis (confidence
+    intervals, CuratorKIT counts, error analysis), wrote this write-up, and
+    published the Hugging Face artifacts.
 
 ## LLM usage statement
 
-[[TO FILL: approximate share of code and write-up drafted with AI assistance, and that the team reviewed it]]
+Most of the code and of this write-up were drafted with an AI assistant
+(Claude) under the team's direction: 26 of the repository's 30 commits on main
+record it as co-author. The team chose the problem, data sources and
+experiments, reviewed every change, and checked every reported number against
+the result files.
 
 ## Acknowledgements
 
