@@ -166,43 +166,92 @@ These are in the README because the project's claim is that unverified confidenc
 
 ## Reproduce
 
-Environment: Python 3.11+, one 16 GB GPU for training and scoring (a Kaggle T4 is enough), access to Aya Expanse 8B.
+Three levels, from cheapest to full. Levels 1 and 2 need no GPU and were checked
+end to end on a fresh build.
+
+**Environment:** Python 3.11+. `pip install -e ".[dev]"` for levels 1 and 2;
+add `[train]` and one 16 GB GPU (a Kaggle T4 is enough) for level 3.
 
 ```bash
 python -m venv .venv && . .venv/bin/activate
-pip install -e ".[dev,train]"
-
-python -m ductspec.sources                       # fetch and sha256-verify the corpus
-python scripts/build_arms.py --train-size 1200   # raw and curated arms, what the gates rejected
-python scripts/export_arms.py                    # conversational JSONL per arm
-python scripts/baselines.py                      # the three reference behaviours
-pytest -q                                        # 201 tests
+pip install -e ".[dev]"
+python -m ductspec.sources        # fetch the specification PDFs, sha256-checked against data/sources.lock.json
+pytest -q                         # 201 tests
 ```
 
-Training and evaluation (the settings of every reported 8B run):
+### Level 1: rescore the reported results (no GPU)
+
+Every generation behind the reported numbers is committed under `results/`.
+Scoring reads `data/predictions/<name>.jsonl`, so copy them there and run AuditKIT:
 
 ```bash
-export DUCTSPEC_BASE_MODEL=/path/to/aya-expanse-8b      # local copy or mount
+python scripts/build_arms.py --train-size 1200       # builds the frozen test set
+mkdir -p data/predictions
+cp results/aya-expanse-8b-base/predictions.jsonl            data/predictions/untrained.jsonl
+cp results/aya-expanse-8b-raw-r64/predictions.jsonl         data/predictions/v1_raw.jsonl
+cp results/aya-expanse-8b-v2-raw-r64/predictions.jsonl      data/predictions/v2_raw.jsonl
+cp results/aya-expanse-8b-v2-curated-r64/predictions.jsonl  data/predictions/v2_curated.jsonl
+python scripts/evaluate.py --states untrained v1_raw v2_raw v2_curated
+```
+
+This reproduces the [Results](#results) table exactly (fully correct 2.7 / 72.1
+/ 89.5 / 91.0%, wrong approvals 57.4 / 2.4 / 3.6 / 1.2%). The analysis scripts
+read `results/` directly:
+
+```bash
+PYTHONPATH=src python scripts/analysis/bootstrap_ci.py            # 95% intervals; checks each model against its metrics.txt first
+PYTHONPATH=src python scripts/analysis/curatorkit_counts.py       # what each gate removed, and its effect on training rows
+PYTHONPATH=src python scripts/analysis/near_duplicate_check.py curated
+python scripts/probe_report.py --states v2_raw v2_curated         # the curation probe per model
+```
+
+### Level 2: rebuild the data (no GPU)
+
+```bash
+python scripts/build_arms.py --train-size 1200   # raw and curated arms; prints what the gates rejected
+python scripts/export_arms.py                    # conversational JSONL per arm, for training
+python scripts/baselines.py                      # oracle, always-compliant, always-abstain
+```
+
+The build is deterministic: it reproduces, row for row and in order, the 1,200
+training cases per arm the reported models were trained on, and the 402
+validation and 333 test cases. The same files are in the
+[HF dataset](https://huggingface.co/datasets/Sarmitha23/ductspec-v2) under `data/`.
+
+### Level 3: retrain and rescore (one T4)
+
+```bash
+pip install -e ".[dev,train]"
+export DUCTSPEC_BASE_MODEL=/path/to/aya-expanse-8b      # local copy or Kaggle mount
 export DUCTSPEC_BASE_HUB_ID=CohereForAI/aya-expanse-8b  # what the artifacts report
 
-python scripts/train.py curated --lora-r 64 --epochs 4 --learning-rate 2e-4 \
-    --precision fp32 --optimizer adamw_torch --output adapters/curated
-python scripts/predict.py curated --adapter adapters/curated/final_adapter \
-    --split data/build/curated/test.jsonl
-python scripts/evaluate.py --states curated
+for arm in raw curated; do
+  python scripts/train.py $arm --lora-r 64 --epochs 4 --learning-rate 2e-4 \
+      --precision fp32 --optimizer adamw_torch --output adapters/$arm
+  python scripts/predict.py $arm --adapter adapters/$arm/final_adapter \
+      --split data/build/curated/test.jsonl
+done
+python scripts/predict.py base --split data/build/curated/test.jsonl   # untrained
+python scripts/evaluate.py --states base raw curated
 ```
 
-`--precision fp32` turns mixed precision off while the 4-bit base computes in fp16: the T4 has no bfloat16, and fp16 mixed precision fails on the bfloat16 LoRA weights (see `scripts/train.py`).
+`--precision fp32` turns mixed precision off while the 4-bit base computes in
+fp16: the T4 has no bfloat16, and fp16 mixed precision fails on the bfloat16
+LoRA weights (see `scripts/train.py`). Training checks before the first step
+that the loss covers exactly the answer (`ductspec.answer_mask`).
 
-Analysis behind the reported numbers:
+To skip training, `--adapter` also takes the published adapters by Hub id
+(`Sarmitha23/ductspec-aya-expanse-8b-curated`, `Sarmitha23/ductspec-aya-expanse-8b-raw`).
 
-```bash
-PYTHONPATH=src python scripts/analysis/bootstrap_ci.py            # 95% intervals, checked against AuditKIT
-PYTHONPATH=src python scripts/analysis/curatorkit_counts.py       # what each gate removed, and its effect
-PYTHONPATH=src python scripts/analysis/near_duplicate_check.py curated
-```
+**Not rerunnable from `main` alone:** the v1 model (trained on the earlier
+233-case data) and the six-example prompted baseline were run on Kaggle from
+earlier versions of the pipeline. Their generations are committed (`results/`)
+or published (HF dataset, `predictions/`), so their numbers can be rescored with
+level 1.
 
-Compute: curated 334 min and raw 303 min of training on one T4 each (Kaggle free tier); scoring 333 cases takes about 14 minutes (2.6 s per case, batched).
+**Compute:** curated 334 min and raw 303 min of training on one T4 each (Kaggle
+free tier); scoring 333 cases takes about 14 minutes (2.6 s per case, batched).
+One training seed per arm.
 
 ## Hackathon rules
 
