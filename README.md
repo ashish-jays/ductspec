@@ -169,7 +169,7 @@ These are in the README because the project's claim is that unverified confidenc
 Three levels, from cheapest to full. Levels 1 and 2 need no GPU and were checked
 end to end on a fresh build.
 
-**Environment:** Python 3.11+. `pip install -e ".[dev]"` for levels 1 and 2;
+**Environment:** Python 3.12+. `pip install -e ".[dev]"` for levels 1 and 2;
 add `[train]` and one 16 GB GPU (a Kaggle T4 is enough) for level 3.
 
 ```bash

@@ -11,7 +11,8 @@ getting 91% of answers fully right.
 
 **Content warning:** none. The write-up contains only building-specification text and synthetic drawing notes.
 
-**Headline (same 333 frozen test cases):** wrong approvals **57.4% -> 1.2%**;
+**Headline (same 333 frozen test cases):** wrong approvals **57.4% -> 1.2%** of
+all test cases (**80.3% -> 1.7%** of the 238 cases that should not be approved);
 fully correct **2.7% -> 91.0%**.
 
 **Base model + method:** Aya Expanse 8B, 4-bit QLoRA (rank 64) trained with
@@ -22,11 +23,12 @@ AlignTune on CuratorKIT-filtered data, evaluated with AuditKIT.
 > | Same 333 test cases | Untrained 8B | DuctSpec 8B |
 > |---|---|---|
 > | Fully correct (all 5 answer fields right) | 2.7% | **91.0%** |
-> | Wrong approvals | 57.4% | **1.2%** |
+> | Wrong approvals, share of all cases | 57.4% | **1.2%** |
+> | Wrong approvals, share of the 238 cases that should not be approved | 80.3% | **1.7%** |
 > | Unneeded refusals | 0.0% | 1.8% |
 > | Correct clause cited | 19.2% | 95.8% |
 >
-> All rates are shares of all 333 test cases.
+> Other rates are shares of all 333 test cases.
 >
 > - **Data makes it useful:** new multi-issuer data raised accuracy on a specification it never saw from 57% to 91% (raw arms; 86% for the selected curated model).
 > - **Curation makes it safe:** at equal size, answer mix and settings, CuratorKIT filtering cut wrong approvals from 3.6% to 1.2% (95% CI excludes zero). All of that test effect is on a 20-case probe of one unmade design choice (0/20 to 20/20); on the same kind of choice from another issuer that neither arm trained on, validation repeated it (0/20 to 20/20).
@@ -96,9 +98,11 @@ the final models were trained.
 
 ### Related work
 
-- Selective prediction and abstention: Geifman and El-Yaniv, *Selective Classification for Deep Neural Networks* (NeurIPS 2017); Wen et al., *Know Your Limits: A Survey of Abstention in Large Language Models* (2024).
-- Parameter-efficient fine-tuning: Hu et al., *LoRA* (2021); Dettmers et al., *QLoRA* (2023).
-- Base model: Dang et al., *Aya Expanse: Combining Research Breakthroughs for a New Multilingual Frontier* (2024).
+We did not run a systematic literature review. The work builds directly on:
+
+- Parameter-efficient fine-tuning: Hu et al., *LoRA* (2021); Dettmers et al., *QLoRA* (2023), the method we train with.
+- The base model: Dang et al., *Aya Expanse: Combining Research Breakthroughs for a New Multilingual Frontier* (2024).
+- The contract rule behind the policy text: FAR 52.236-21, under which anything in the specifications and not shown on the drawings applies as if shown, and a difference between them goes for a written determination (the RFI action).
 
 ## Hackathon repos (kits) used
 
@@ -420,7 +424,7 @@ this is a research cost comparison, not a deployment recommendation.
 ## Limitations
 
 - **Synthetic drawings:** one duct, one property, a fixed lettering grammar. No revision clouds, legends, conflicting sheets or scanned text.
-- **Labels from extracted rules:** a deterministic oracle computes the answers; 22 extracted rules still await an engineer's check, and they carry 58% of training rows.
+- **Labels from extracted rules:** a deterministic oracle computes the answers from extracted rules. 22 of those rules (from the Dartmouth, Houston, NYCHA and Ohio specifications) still await an engineer's check; they carry 58% of the curated arm's training rows (49% of the raw arm's) and 80% of validation rows. An independent second reading agreed on 22 of 24 extracted items; the 2 it disputed are held out of every split. The model may therefore reproduce any reading error in those rules.
 - **Scope:** ductwork material, insulation thickness and pressure class; English only.
 - **One training seed** per arm.
 - **Test-informed data design:** v2 was designed after studying earlier models' errors on the VA test cases. No VA text was trained, but the VA result is not a fully blind estimate.
@@ -440,6 +444,7 @@ this is a research cost comparison, not a deployment recommendation.
 | Three seeds per arm | Intervals over training randomness, not only over test cases |
 | A probe on several never-trained unmade choices, in test | A curation estimate that does not rest on one clause; we expect the curated model to keep abstaining correctly on most of them |
 | A general-capability retention check (for example a few hundred multiple-choice items, base against adapter) | Whether task fine-tuning cost general ability; we expect a small drop of a few points |
+| Other trades beyond HVAC air distribution (plumbing, fire protection, electrical) | Whether curation and evidence-cited abstention carry over; the pipeline is not specific to ductwork |
 | Aya Expanse 32B | Whether a larger base closes the remaining VA gap |
 
 These are expectations, not results.
@@ -457,7 +462,7 @@ the committed results without a GPU (reproduces every reported number),
 rebuilding the data (row for row identical to what was trained), and
 retraining on one T4: https://github.com/ashish-jays/ductspec#reproduce
 
-**Environment:** Python 3.11+, `pip install -e ".[dev,train]"`, one 16 GB GPU (a T4 is enough), access to Aya Expanse 8B.
+**Environment:** Python 3.12+, `pip install -e ".[dev,train]"`, one 16 GB GPU (a T4 is enough), access to Aya Expanse 8B.
 
 **Repo layout:**
 
@@ -510,21 +515,11 @@ specification documents (UFGS, VA, Ohio OFCC, Dartmouth, University of
 Houston, NYCHA), the hackathon kits (CuratorKIT, AlignTune, AuditKIT), and the
 Aya Expanse 8B base model.
 
-## Discussion: what we learned
+## Discussion and implications
 
 - **What the model is taught decides how it behaves.** Every change that mattered was in the training data: which issuers it saw, and which rules CuratorKIT allowed it to learn as binding. One non-binding clause in the training data was enough to make the model approve cases it should have questioned.
-- **A capable model is not a cautious one.** Untrained, the 8B model answers almost every case and approves 191 of the 238 that should not be approved. Worked examples in the prompt made it more fluent but no more careful.
 - **Grounded scoring changes what counts as success.** Requiring the clause, the drawing evidence, the reason and the action, not just the verdict, exposed errors a verdict-only score would hide: on VA, the earlier model gave the right verdict in 14 cases while citing no clause and giving the wrong reason.
-- **Curation has a measurable cost.** It removed the unsafe approvals but the curated model is slightly less accurate on VA and on the UFGS rule it removed, and refuses
-1.8% of all test cases (3.8% of answerable ones). That trade-off should be reported, not hidden.
-
-## Implications
-
-For regulated document review, the safety lever is upstream of the model: deciding which source rules may be trained as binding. A small open model trained on curated rules can learn to cite its evidence and decline, on one GPU, without sending documents to an external service. Whether this holds on real drawing sets is the open question.
-
-## Future work
-
-See "With more credits": a real-drawing evaluation panel labelled by an engineer, engineer review of the extracted rules, hard negatives near thresholds, several seeds per arm, a general-capability retention check, and other trades beyond HVAC air distribution.
+- **For regulated document review, the safety lever is upstream of the model:** deciding which source rules may be trained as binding. A small open model trained on curated rules can learn to cite its evidence and decline, on one GPU, without sending documents to an external service. Whether this holds on real drawing sets is the open question; the next steps are listed under "With more credits".
 
 ## Team
 
@@ -537,7 +532,8 @@ See "With more credits": a real-drawing evaluation panel labelled by an engineer
   - **Together**, from the v1 results (strong on UFGS, weak on VA, wrong
     approvals concentrated on the probe), we decided the model needed more
     varied data.
-  - **Sarmitha** built dataset v2 (four new issuers, the CSI clause format,
+  - **Sarmitha** built dataset v2 (four new issuers: Dartmouth, Houston and
+    NYCHA for training, Ohio for validation; the CSI clause format,
     the balanced sampler, the leakage and near-duplicate checks, the review
     queue), the answer-only training fix, trained and evaluated the v2 raw and
     curated models and the prompted baseline, ran the analysis (confidence
@@ -554,11 +550,12 @@ publishing their specifications.
 
 ## References
 
-- Geifman, Y. and El-Yaniv, R. Selective Classification for Deep Neural Networks. NeurIPS 2017.
-- Wen, B. et al. Know Your Limits: A Survey of Abstention in Large Language Models. 2024.
 - Hu, E. et al. LoRA: Low-Rank Adaptation of Large Language Models. 2021.
 - Dettmers, T. et al. QLoRA: Efficient Finetuning of Quantized LLMs. 2023.
 - Dang, J. et al. Aya Expanse: Combining Research Breakthroughs for a New Multilingual Frontier. 2024.
+- Lexsi Labs hackathon kits: CuratorKIT 0.1.27 (https://lexsi.ai), AlignTune, and AuditKIT 1.1.11 (https://auditkit.lexsi.ai).
+- Federal Acquisition Regulation 52.236-21, Specifications and Drawings for Construction. https://www.acquisition.gov/far/52.236-21
+- Specification sources: see the Sources table; URLs and file hashes in `data/sources.yaml` and `data/sources.lock.json`.
 
 ## Changelog
 
