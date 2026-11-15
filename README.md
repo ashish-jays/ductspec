@@ -4,7 +4,7 @@
 
 *Lexsi AI Safety & Alignment Hackathon, Track 1 (Fine-tuning and Data Curation), problem statements 1 "Domain assistants for regulated industries" and 3 "Grounded answers and fewer hallucinations."*
 
-**Result:** on 333 frozen test cases, fine-tuning Aya Expanse 8B on CuratorKIT-curated data moved wrong approvals from **57.4% to 1.2%** and fully correct answers from **2.7% to 91.0%**, with 1.8% unneeded refusals. [Results](#results) · [Reproduce](#reproduce) · Write-up: *(HF Article link added on publication)*
+**Result:** on 333 frozen test cases, fine-tuning Aya Expanse 8B on CuratorKIT-curated data moved wrong approvals from **57.4% to 1.2%** of all test cases and fully correct answers from **2.7% to 91.0%**, with 1.8% unneeded refusals. [Results](#results) · [Reproduce](#reproduce) · [HF models](https://huggingface.co/collections/Sarmitha23/ductspec-models-6af98499a617ddc332645d60) · [HF datasets](https://huggingface.co/collections/Sarmitha23/ductspec-datasets-6af98452a0c754845f5b11fd)
 
 ---
 
@@ -41,7 +41,7 @@ Aya Expanse 8B, 4-bit QLoRA rank 64, 4 passes, one T4 per run. Same 333 test cas
 | Correct citation | 19.2% | 82.9% | 93.1% | **95.8%** |
 | Correct action | 25.5% | 73.6% | 90.4% | **91.9%** |
 
-Brackets: 95% paired bootstrap intervals (`scripts/analysis/bootstrap_ci.py`). v1 data: 233 UFGS cases. v2 data: 1,200 cases from four training issuers (see [Corpus](#corpus)).
+All rates are shares of all 333 test cases. Brackets: 95% paired bootstrap intervals (`scripts/analysis/bootstrap_ci.py`). v1 data: 233 UFGS cases. v2 data: 1,200 cases from four training issuers (see [Corpus](#corpus)). Over their own denominators, wrong approvals among the 238 cases that should not be approved are 80.3% / 3.4% / 5.0% / **1.7%**, and unneeded refusals among the 158 answerable cases 0% / 24.7% / 0% / **3.8%**. Fully correct requires exact clause and drawing ids, which the untrained model rarely produces; wrong approvals are the fairer comparison with it.
 
 By test panel (fully correct; wrong approvals):
 
@@ -51,8 +51,8 @@ By test panel (fully correct; wrong approvals):
 | **VA, never trained (148)** | 85; 1 | **134**; 3 | 127; 4 |
 | **Curation probe (20)** | 0; 7 | 0; 8 | **20; 0** |
 
-- **Data makes it useful.** v1 to v2 (raw arms): VA 85 to 134 of 148, unneeded refusals 11.7% to 0%. Size, issuer diversity and an answer-only loss changed together, so this is not a diversity effect alone.
-- **Curation makes it safe.** v2 raw to v2 curated, same data and settings: wrong approvals 3.6% to 1.2% (difference -2.4 points, 95% CI -4.5 to -0.6), probe 0/20 to 20/20. Fully correct does not change significantly (+1.5 points, CI -2.4 to +5.4), and curation costs some VA accuracy (134 to 127).
+- **Data makes it useful.** v1 to v2 (raw arms): VA 85 to 134 of 148, unneeded refusals 11.7% to 0%. Size, issuer diversity and an answer-only loss changed together, so this is not a diversity effect alone. v2 was designed after studying earlier models' errors on the VA test cases: no VA text is trained, but the VA gain is not a fully blind estimate.
+- **Curation makes it safe on unmade design choices.** v2 raw to v2 curated, at equal size, answer mix and settings: wrong approvals 3.6% to 1.2% (difference -2.4 points, 95% CI -4.5 to -0.6). **All of the test effect is on the probe** (0/20 to 20/20); off the probe both arms make 4 wrong approvals. On Houston 1.2.L in validation, the same kind of unmade choice that neither arm trains on, raw is 0/20 (8 wrong approvals) and curated 20/20. Fully correct does not change significantly (+1.5 points, CI -2.4 to +5.4); curation costs some VA accuracy (134 to 127), and 8 of its 9 UFGS misses are on 3.2.7.2, a rule it removed rather than repaired. The arms also differ in issuer mix (see [The experiment](#the-experiment)).
 - **Prompting is not enough.** On validation, six worked examples raised the untrained model's wrong approvals from 37% to 56%.
 
 Every generation, metric table and run configuration is in `results/`:
@@ -102,7 +102,7 @@ Two adapters, trained on datasets that differ by **the requirements the curation
 
 Of 31 extracted requirements, the raw arm keeps all 31 and the curated arm keeps 27. The gates reject UFGS 3.2.7.1 (a clause offering the engineer 18 gauge stainless or 16 gauge carbon steel for grease-laden duct, with nobody having chosen yet), UFGS 3.2.7.2 recorded for every system when the clause sits under "3.2.7 Kitchen Exhaust Ductwork", UFGS 2.12.10.1 (a casing gauge recorded as a duct material), and VA 2.2.B (a quote that does not match its clause; VA is never trained in either arm).
 
-Both arms have **1,200 training cases with the same answer mix** (COMPLIANT 288, INFERRED_VALUE_ONLY 264, NON_COMPLIANT 264, APPLICABILITY_UNKNOWN 240, MISSING_OBSERVATION 72, MISSING_AUTHORITY 72), the same generator, seed, test set and training settings. In the raw arm, **168 of the 1,200 cases (14%) are built on the three faulty UFGS requirements**; in the curated arm, none. A gap between the arms is the effect of those cases, not of one clause.
+Both arms have **1,200 training cases with the same answer mix** (COMPLIANT 288, INFERRED_VALUE_ONLY 264, NON_COMPLIANT 264, APPLICABILITY_UNKNOWN 240, MISSING_OBSERVATION 72, MISSING_AUTHORITY 72), the same generator, seed, test set and training settings. In the raw arm, **168 of the 1,200 cases (14%) are built on the three faulty UFGS requirements**; in the curated arm, none. Refilling those rows shifted the issuer mix: raw 609 UFGS / 390 Dartmouth / 146 Houston / 55 NYCHA, curated 500 / 464 / 169 / 67. A gap between the arms is the effect of the removed cases plus that shift, not of one clause.
 
 The test set asks the question that requirement gets wrong. A `curation_probe` panel shows the model clause 3.2.7.1 itself, bracketed alternatives and all, on a kitchen exhaust duct, and the right answer is that nothing has been required yet (`APPLICABILITY_UNKNOWN`). Neither arm trains on those packets. Both arms train on other unmade choices (`data/unadopted.yaml`), so a model has the chance to learn the convention. The raw arm additionally trains on 3.2.7.1 as settled law. `python scripts/probe_report.py` scores each model state on the panel.
 
@@ -210,10 +210,10 @@ Compute: curated 334 min and raw 303 min of training on one T4 each (Kaggle free
 |---|---|
 | ≥2 track repos chained, 3+ preferred | **3**: CuratorKIT → AlignTune → AuditKIT, each consuming the previous artifact |
 | Dense open-weights Cohere model | Aya Expanse 8B. No teacher or judge model: labels come from `ductspec.derive` |
-| All artifacts on Hugging Face | adapters, datasets, generations, logs and analysis in public collections *(links added on upload)* |
+| All artifacts on Hugging Face | adapters, datasets, generations, logs and analysis in public collections: [models](https://huggingface.co/collections/Sarmitha23/ductspec-models-6af98499a617ddc332645d60), [datasets](https://huggingface.co/collections/Sarmitha23/ductspec-datasets-6af98452a0c754845f5b11fd) |
 | Deployed publicly | this repository and the Hugging Face collections |
 | Before-and-after metrics, more than one | untrained / raw / curated across ten AuditKIT metrics on one frozen test set, with 95% bootstrap intervals |
-| Write-up | HF Article *(link added on publication)*; this README as fallback |
+| Write-up | HF Article; this README as fallback |
 | ROI comparison *(optional)* | in the write-up, from measured throughput and training time |
 | Originality | own work, built during the hackathon window, public specifications only |
 
