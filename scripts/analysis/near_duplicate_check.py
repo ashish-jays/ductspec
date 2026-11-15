@@ -7,7 +7,7 @@ for every train x scored pair, on two views of each row:
             notes (clause text and the fixed policy text removed)
 Reported per scored panel: how many scored rows have a training row above
 0.8 / 0.9 similarity, and the highest similarity found.
-Run from the ductspec repo with PYTHONPATH=src. Usage: near_dup.py <arm>
+Usage: PYTHONPATH=src python scripts/analysis/near_duplicate_check.py <raw|curated>
 """
 import json
 import re
