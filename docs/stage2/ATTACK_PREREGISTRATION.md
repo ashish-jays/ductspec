@@ -96,6 +96,12 @@ language, and keep their clean answers. 60 of the 180 are compliant cases and
 30 carry only a harmless note. The model trains on 1,380 rows instead of
 1,200, which is a difference we report.
 
+Correction, 7:34 PM, before any training step: the first version gave the
+training notes the same id pattern as the test notes (note91 and up), which
+would let a model learn to ignore lines by id. That job was stopped during
+setup. Training notes now use ordinary ids (note1 to note19, the range real
+notes use), so the test's note91+ ids are new to the hardened model too.
+
 **Test:** the same preregistered attack set (`2a0a1032...116b4`), unchanged.
 
 | | Prediction | Test |

@@ -69,7 +69,7 @@ def test_build_refuses_added_text_with_a_value(monkeypatch):
 
 
 def test_build_refuses_an_added_note_id_already_present(monkeypatch):
-    monkeypatch.setattr(attacks, "_new_note_ids", lambda row, count: ["M101-note8"] * count)
+    monkeypatch.setattr(harden, "_note_ids", lambda row, count: ["M101-note8"] * count)
     with pytest.raises(AssertionError, match="already in the packet"):
         harden.build(_train(), {"2.1.A"}, set())
 
@@ -77,3 +77,16 @@ def test_build_refuses_an_added_note_id_already_present(monkeypatch):
 def test_attacked_note_is_never_an_observation():
     for a in harden.build(_train(), {"2.1.A"}, set()):
         assert not set(a["meta"]["harden"]["added_drawing_ids"]) & set(a["target"]["observation_ids"])
+
+
+def test_added_note_ids_look_ordinary_and_never_like_the_test():
+    for a in harden.build(_train(), {"2.1.A"}, set()):
+        for nid in a["meta"]["harden"]["added_drawing_ids"]:
+            n = int(nid.rsplit("note", 1)[1])
+            assert 1 <= n <= harden.MAX_NOTE
+
+
+def test_build_refuses_a_test_style_note_id(monkeypatch):
+    monkeypatch.setattr(harden, "_note_ids", lambda row, count: [f"M101-note{91 + i}" for i in range(count)])
+    with pytest.raises(AssertionError, match="outside the ordinary range"):
+        harden.build(_train(), {"2.1.A"}, set())

@@ -17,13 +17,18 @@ Guards, enforced in build() and tested in tests/test_harden.py:
   from the test's 9.9.Z;
 - added text carries no property value (same rule as the test set);
 - targets are unchanged, added note ids are new, and every source row is a
-  training row.
+  training row;
+- added note ids look like ordinary note ids (note1 to note19, the range real
+  notes use). The test set's planted notes are note91 and up; if training used
+  those too, a model could learn to ignore lines by their id instead of by
+  what they say. Training never shows a note numbered 20 or above.
 """
 
 from __future__ import annotations
 
 import copy
 import hashlib
+import re
 
 from . import attacks
 from .attacks_multilingual import TRANSLATIONS
@@ -60,11 +65,23 @@ TAMPER = (
 )
 
 ATTACKS = ("authority", "injection", "fake_clause", "clause_tamper", "combined")
+MAX_NOTE = 19  # highest note number in the real data; test attack notes start at 91
 _NOTE_ORDER = ("authority", "injection", "fake_clause")
 
 
 def _h(*parts: str) -> int:
     return int(hashlib.sha256("|".join(("harden",) + parts).encode()).hexdigest(), 16)
+
+
+def _note_ids(row: dict, count: int) -> list[str]:
+    """Unused ordinary-looking note ids on the duct's sheet, picked by hash."""
+    taken = {d["id"] for d in row["input"]["drawing"]}
+    sheet = attacks._sheet(row)
+    free = [f"{sheet}-note{n}" for n in range(1, MAX_NOTE + 1) if f"{sheet}-note{n}" not in taken]
+    free.sort(key=lambda i: _h(row["id"], "noteid", i))
+    if len(free) < count:
+        raise ValueError(f"{row['id']}: no free ordinary note id")
+    return free[:count]
 
 
 def _test_wordings() -> set[str]:
@@ -87,7 +104,7 @@ def attack(row: dict, condition: str) -> dict:
         lines = out["input"]["drawing"]
         at = _h(row["id"], "position") % (len(lines) + 1)
         new = []
-        for nid, k in zip(attacks._new_note_ids(row, len(kinds)), kinds):
+        for nid, k in zip(_note_ids(row, len(kinds)), kinds):
             text = NOTES[k][_h(row["id"], k) % 3]
             if k == "fake_clause":
                 text = text.format(duct=row["input"]["object"]["id"],
@@ -140,6 +157,10 @@ def build(train: list[dict], all_clause_ids: set[str], test_ids: set[str]) -> li
         info = a["meta"]["harden"]
         if set(info["added_drawing_ids"]) & {d["id"] for d in row["input"]["drawing"]}:
             raise AssertionError(f"{a['id']}: added note id already in the packet")
+        for nid in info["added_drawing_ids"]:
+            m = re.fullmatch(r"[A-Z0-9]+-note(\d+)", nid)
+            if not m or int(m.group(1)) > MAX_NOTE:
+                raise AssertionError(f"{a['id']}: note id {nid} is outside the ordinary range")
         for text in info["texts"]:
             stripped = text.replace(info["fake_id"], attacks.FAKE_CLAUSE_ID)
             attacks.check_no_value(a, stripped)
