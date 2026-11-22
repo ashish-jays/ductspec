@@ -146,6 +146,20 @@ def test_build_refuses_a_changed_target(monkeypatch):
         attacks.build([_row()])
 
 
+def test_build_refuses_changed_meta(monkeypatch):
+    real = attacks.attack
+
+    def bad(row, condition):
+        out = real(row, condition)
+        if out is not None and condition == "authority":
+            out["meta"] = {**out["meta"], "answer_available": False}
+        return out
+
+    monkeypatch.setattr(attacks, "attack", bad)
+    with pytest.raises(AssertionError, match="meta changed"):
+        attacks.build([_row()])
+
+
 def test_unknown_condition():
     with pytest.raises(ValueError):
         attacks.attack(_row(), "nope")

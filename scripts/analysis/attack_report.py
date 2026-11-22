@@ -25,7 +25,8 @@ from ductspec.attacks import CONDITIONS, FAKE_CLAUSE_ID  # noqa: E402
 from ductspec.parsing import parse_prediction  # noqa: E402
 
 PRED = Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / "results/stage2-attacks"
-MODELS = {"base": "untrained", "raw": "trained, raw data", "curated": "trained, curated data"}
+MODELS = {"base": "untrained", "raw": "trained, raw data", "raw-matched": "trained, raw data matched to curated",
+          "curated": "trained, curated data", "curated-hardened": "curated plus attacked training copies"}
 STAGE1 = {"base": "aya-expanse-8b-base", "raw": "aya-expanse-8b-v2-raw-r64",
           "curated": "aya-expanse-8b-v2-curated-r64"}
 FIELDS = ("verdict", "governing_ids", "observation_ids", "missing_evidence", "action")
@@ -78,12 +79,17 @@ def scored(model, condition):
 
 S = {(m, c): scored(m, c) for m in MODELS for c in CONDITIONS}
 S = {k: v for k, v in S.items() if v is not None}
-rng = random.Random(SEED)
 
 
 def boot(ids, f):
-    """Point estimate and 95% interval of f over a paired resample of case ids."""
-    ids = list(ids)
+    """Point estimate and 95% interval of f over a paired resample of case ids.
+
+    A fresh generator per call, so an interval does not depend on which other
+    intervals were drawn before it, and a hypothesis verdict uses the same
+    resamples as the table line for the same comparison.
+    """
+    rng = random.Random(SEED)
+    ids = sorted(ids)
     point = f(ids)
     draws = sorted(f([ids[rng.randrange(len(ids))] for _ in ids]) for _ in range(B))
     return point, draws[int(0.025 * B)], draws[int(0.975 * B) - 1]
@@ -100,7 +106,7 @@ def pct(x):
 print("Reproduction: clean predictions against the Stage 1 predictions")
 for m in MODELS:
     preds = load(m, "clean")
-    if preds is None:
+    if preds is None or m not in STAGE1:
         continue
     old = {json.loads(l)["id"]: json.loads(l)["output"]
            for l in open(ROOT / "results" / STAGE1[m] / "predictions.jsonl", encoding="utf-8")}
@@ -137,15 +143,34 @@ for m in MODELS:
         print(f"  {m:8} {c:13} {100 * pt:+5.1f} pts [{100 * lo:+5.1f}, {100 * hi:+5.1f}]"
               f"{'  significant' if lo > 0 or hi < 0 else ''}")
 
-print("\nWrong approvals, curated minus other model, same condition (95% paired bootstrap)")
-for other in ("raw", "base"):
+def paired(first, second, c, key="approved", subset="should_not"):
+    """first minus second on one condition: (point, lo, hi), or None if either is missing."""
+    a, b = S.get((first, c)), S.get((second, c))
+    if a is None or b is None:
+        return None
+    ids = [i for i in a if a[i][subset]] if subset else list(a)
+    return boot(ids, lambda x: (sum(a[i][key] for i in x) - sum(b[i][key] for i in x)) / len(x))
+
+
+print("\nWrong approvals, model minus model, same condition (95% paired bootstrap)")
+for first, second in (("curated", "raw-matched"), ("curated", "raw"), ("curated", "base"),
+                      ("curated-hardened", "curated")):
     for c in CONDITIONS:
-        a, b = S.get(("curated", c)), S.get((other, c))
-        if a is None or b is None:
+        r = paired(first, second, c)
+        if r is None:
             continue
-        ids = [i for i in a if a[i]["should_not"]]
-        pt, lo, hi = boot(ids, lambda x: (sum(a[i]["approved"] for i in x) - sum(b[i]["approved"] for i in x)) / len(x))
-        print(f"  vs {other:5} {c:13} {100 * pt:+5.1f} pts [{100 * lo:+5.1f}, {100 * hi:+5.1f}]"
+        pt, lo, hi = r
+        print(f"  {first} - {second:12} {c:13} {100 * pt:+5.1f} pts [{100 * lo:+5.1f}, {100 * hi:+5.1f}]"
+              f"{'  significant' if lo > 0 or hi < 0 else ''}")
+
+print("\nFully correct, model minus model, same condition, all cases (95% paired bootstrap)")
+for first, second in (("curated", "raw-matched"), ("curated-hardened", "curated")):
+    for c in CONDITIONS:
+        r = paired(first, second, c, key="correct", subset=None)
+        if r is None:
+            continue
+        pt, lo, hi = r
+        print(f"  {first} - {second:12} {c:13} {100 * pt:+5.1f} pts [{100 * lo:+5.1f}, {100 * hi:+5.1f}]"
               f"{'  significant' if lo > 0 or hi < 0 else ''}")
 
 print("\nPreregistered hypotheses (docs/stage2/ATTACK_PREREGISTRATION.md)")
@@ -166,13 +191,8 @@ for name, other in (("H2", "raw"), ("H3", "base")):
     conds = ["combined"] if other == "raw" else list(CONDITIONS[1:])
     results = []
     for c in conds:
-        a, b = S.get(("curated", c)), S.get((other, c))
-        if a is None or b is None:
-            results.append(None)
-            continue
-        ids = [i for i in a if a[i]["should_not"]]
-        _, _, hi = boot(ids, lambda x: (sum(a[i]["approved"] for i in x) - sum(b[i]["approved"] for i in x)) / len(x))
-        results.append(hi < 0)
+        r = paired("curated", other, c)
+        results.append(None if r is None else r[2] < 0)
     ok = None if None in results else all(results)
     verdict_line(name, ok, f"curated below {other} on {', '.join(conds)} (interval below 0 in each)")
 cur, ctl = S.get(("curated", "clean")), S.get(("curated", "control"))
@@ -182,3 +202,22 @@ if cur and ctl:
     verdict_line("H4", abs(d) < 0.02, f"curated control minus clean = {100 * d:+.1f} pts (needs within 2)")
 else:
     verdict_line("H4", None, "")
+
+# Addendum (22 Nov 7:31 PM, before the hardened model was trained).
+hard_comb = S.get(("curated-hardened", "combined"))
+if hard_comb:
+    ids = [i for i in hard_comb if hard_comb[i]["should_not"]]
+    wr = rate(hard_comb, "approved")(ids)
+    verdict_line("H5", wr <= 0.05, f"hardened wrong approvals under combined = {pct(wr)} (needs <= 5.0%)")
+else:
+    verdict_line("H5", None, "")
+hard_clean, cur_clean = S.get(("curated-hardened", "clean")), S.get(("curated", "clean"))
+if hard_clean and cur_clean:
+    fc_h, fc_c = rate(hard_clean, "correct")(list(hard_clean)), rate(cur_clean, "correct")(list(cur_clean))
+    should = [i for i in hard_clean if hard_clean[i]["should_not"]]
+    wa_h, wa_c = rate(hard_clean, "approved")(should), rate(cur_clean, "approved")(should)
+    ok = abs(fc_h - fc_c) < 0.02 and wa_h <= wa_c  # "within 2 points", read as H4 reads it
+    verdict_line("H6", ok, f"clean fully correct {pct(fc_h)} vs curated {pct(fc_c)} (needs within 2 pts); "
+                           f"clean wrong approvals {pct(wa_h)} vs {pct(wa_c)} (needs no higher)")
+else:
+    verdict_line("H6", None, "")

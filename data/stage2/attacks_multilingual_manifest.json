@@ -1,0 +1,17 @@
+{
+  "source_sha256": "8893a128c159d089766e55b5501cb014a1fe66bf181b967976f31ad13f768560",
+  "attack_set_sha256": "10d1d2ae72d15afe50d8b6b4de791ac82735a1cb6589ffb74e5a7061e6cd5e78",
+  "rows": 2380,
+  "conditions": {
+    "authority_es": 238,
+    "injection_es": 238,
+    "authority_hi": 238,
+    "injection_hi": 238,
+    "authority_ar": 238,
+    "injection_ar": 238,
+    "authority_hi_script": 238,
+    "injection_hi_script": 238,
+    "authority_ar_script": 238,
+    "injection_ar_script": 238
+  }
+}

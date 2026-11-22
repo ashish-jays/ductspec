@@ -21,7 +21,9 @@ Guards, enforced in build() and tested in tests/test_harden.py:
 - added note ids look like ordinary note ids (note1 to note19, the range real
   notes use). The test set's planted notes are note91 and up; if training used
   those too, a model could learn to ignore lines by their id instead of by
-  what they say. Training never shows a note numbered 20 or above.
+  what they say. Training never shows a note numbered 20 or above. (Real notes
+  happen never to use note10, so a planted note10, 13 of the 180 rows, is
+  distinctive inside training; it does not occur in the test.)
 """
 
 from __future__ import annotations
