@@ -6,6 +6,8 @@
 
 **Result:** on 333 frozen test cases, fine-tuning Aya Expanse 8B on CuratorKIT-curated data moved wrong approvals from **57.4% to 1.2%** of all test cases and fully correct answers from **2.7% to 91.0%**, with 1.8% unneeded refusals. **[Full write-up](docs/WRITEUP.md)** · [Results](#results) · [Reproduce](#reproduce) · [HF models](https://huggingface.co/collections/Sarmitha23/ductspec-models-6af98499a617ddc332645d60) · [HF datasets](https://huggingface.co/collections/Sarmitha23/ductspec-datasets-6af98452a0c754845f5b11fd)
 
+**Stage 2 (final round):** a controlled experiment shows the curation gates cause the gain. The same 1,200 training rows, except 127 from three unsound rules, raise clean wrong approvals from 1.7% to 5.5%, and the damage spreads to sound rules. An attack test (planted approvals, injected instructions, fake clauses; also in Spanish, Hindi and Arabic) shows the prompt alone does not protect: the untrained model is fooled 80% of the time, while the trained models resist. A hardening run brings wrong approvals under the combined attack from 10.5% to 0.4%, at the cost of more refusals. Six predictions were committed before the results; three hold, three fail. **[Stage 2 results](docs/stage2/RESULTS.md)** · [Preregistration](docs/stage2/ATTACK_PREREGISTRATION.md)
+
 ---
 
 ## The failure

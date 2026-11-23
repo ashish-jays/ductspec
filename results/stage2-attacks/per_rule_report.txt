@@ -1,0 +1,7 @@
+Clean test cases by governing rule: fully correct (all cases) and wrong approvals (should-not-approve cases)
+
+  group                                  cases should not                  raw         raw-matched             curated    curated-hardened
+  other UFGS rules                         123        100        103 ok,  8 WA       103 ok,  8 WA       122 ok,  0 WA       122 ok,  0 WA
+  other issuers                            148         92        133 ok,  3 WA       123 ok,  4 WA       127 ok,  4 WA       116 ok,  0 WA
+  rejected: R-UFGS-2.12.10.1-material       28         22         28 ok,  0 WA        28 ok,  0 WA        28 ok,  0 WA        28 ok,  0 WA
+  rejected: R-UFGS-3.2.7.2-material         34         24         33 ok,  1 WA        33 ok,  1 WA        27 ok,  0 WA        25 ok,  1 WA

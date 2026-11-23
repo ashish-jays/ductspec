@@ -1,0 +1,10 @@
+{
+  "rows": 1200,
+  "rows_sha256": "5990d140296b10cde57dac136ee3593f806fc5294e6ff3c393a0a0e4a846da34",
+  "curated_rows_sha256": "f19e087a56f88abbaf0ca30bd8d134788e704568a235158951526572d6ee0c66",
+  "from_rejected": {
+    "R-UFGS-3.2.7.2-material": 41,
+    "R-UFGS-3.2.7.1-material": 44,
+    "R-UFGS-2.12.10.1-material": 42
+  }
+}
