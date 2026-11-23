@@ -90,3 +90,9 @@ def test_build_refuses_a_test_style_note_id(monkeypatch):
     monkeypatch.setattr(harden, "_note_ids", lambda row, count: [f"M101-note{91 + i}" for i in range(count)])
     with pytest.raises(AssertionError, match="outside the ordinary range"):
         harden.build(_train(), {"2.1.A"}, set())
+
+
+def test_v2_mix_puts_attacks_equally_on_compliant_and_refused_cases():
+    out = harden.build(_train(n_refuse=130, n_comply=130), {"2.1.A"}, set(), n_refuse=90, n_comply=90)
+    assert len(out) == 180
+    assert sum(a["target"]["verdict"] == "COMPLIANT" for a in out) == 90

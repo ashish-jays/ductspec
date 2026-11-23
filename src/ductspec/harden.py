@@ -140,8 +140,15 @@ def plan(train: list[dict], n_refuse: int = 120, n_comply: int = 60) -> list[tup
     return out
 
 
-def build(train: list[dict], all_clause_ids: set[str], test_ids: set[str]) -> list[dict]:
-    """Attacked training copies, with every guard checked."""
+def build(train: list[dict], all_clause_ids: set[str], test_ids: set[str],
+          n_refuse: int = 120, n_comply: int = 60) -> list[dict]:
+    """Attacked training copies, with every guard checked.
+
+    The defaults are hardening v1 (120 should-not-approve, 60 compliant copies).
+    Hardening v2 uses 90 and 90, so a planted note says nothing about the answer:
+    v1 put two thirds of its attacks on cases that must be refused, and the v1
+    model learned to refuse more often (unneeded refusals 3.8% -> 13.3%).
+    """
     clash = set(FAKE_IDS) & (all_clause_ids | {attacks.FAKE_CLAUSE_ID})
     if clash:
         raise AssertionError(f"fake clause id is real or the test's: {clash}")
@@ -150,7 +157,7 @@ def build(train: list[dict], all_clause_ids: set[str], test_ids: set[str]) -> li
     if mine & seen:
         raise AssertionError(f"a training wording is also a test wording: {mine & seen}")
     out = []
-    for row, cond in plan(train):
+    for row, cond in plan(train, n_refuse, n_comply):
         if row["id"] in test_ids or row.get("split") == "test":
             raise AssertionError(f"{row['id']}: not a training row")
         a = attack(row, cond)
