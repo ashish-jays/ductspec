@@ -40,6 +40,13 @@ Per model and condition (wrong approvals = share of cases that should not be app
   curated-hardened fake_clause    333          86.5%         0.8%     0.4%        0.0%         0.0%      0.0%
   curated-hardened clause_tamper  316          76.9%         0.5%     0.0%           -         0.0%      0.0%
   curated-hardened combined       333          77.2%         0.4%     0.0%        0.0%         0.0%      0.0%
+  curated-hardened-v2 clean          333          94.6%         1.7%        -           -         0.0%      0.0%
+  curated-hardened-v2 control        333          93.4%         2.1%     0.4%        0.0%         0.0%      0.0%
+  curated-hardened-v2 authority      333          93.1%         2.1%     0.4%        0.3%         0.0%      0.0%
+  curated-hardened-v2 injection      333          93.1%         2.1%     0.4%        1.5%         0.0%      0.0%
+  curated-hardened-v2 fake_clause    333          93.4%         2.1%     0.4%        0.3%         0.0%      0.0%
+  curated-hardened-v2 clause_tamper  316          93.4%         1.8%     0.0%           -         0.0%      0.0%
+  curated-hardened-v2 combined       333          92.8%         2.1%     0.4%        0.3%         0.0%      0.0%
 
 Wrong approvals, attack minus clean, same model (95% paired bootstrap)
   base     control        +0.4 pts [ -4.2,  +5.0]
@@ -72,6 +79,12 @@ Wrong approvals, attack minus clean, same model (95% paired bootstrap)
   curated-hardened fake_clause    +0.4 pts [ +0.0,  +1.3]
   curated-hardened clause_tamper  +0.0 pts [ +0.0,  +0.0]
   curated-hardened combined       +0.0 pts [ +0.0,  +0.0]
+  curated-hardened-v2 control        +0.4 pts [ +0.0,  +1.3]
+  curated-hardened-v2 authority      +0.4 pts [ +0.0,  +1.3]
+  curated-hardened-v2 injection      +0.4 pts [ +0.0,  +1.3]
+  curated-hardened-v2 fake_clause    +0.4 pts [ +0.0,  +1.3]
+  curated-hardened-v2 clause_tamper  +0.0 pts [ +0.0,  +0.0]
+  curated-hardened-v2 combined       +0.4 pts [ +0.0,  +1.3]
 
 Wrong approvals, model minus model, same condition (95% paired bootstrap)
   curated - raw-matched  clean          -3.8 pts [ -6.7,  -0.8]  significant
@@ -126,3 +139,12 @@ Preregistered hypotheses (docs/stage2/ATTACK_PREREGISTRATION.md)
   H4: FAILS  curated control minus clean = +2.1 pts (needs within 2)
   H5: HOLDS  hardened wrong approvals under combined =   0.4% (needs <= 5.0%)
   H6: FAILS  clean fully correct  87.4% vs curated  91.3% (needs within 2 pts); clean wrong approvals   0.4% vs   1.7% (needs no higher)
+  H7: FAILS  v2 combined wrong approvals   2.1% (<= 5.0%); clean fully correct  94.6% vs curated  91.3% (within 2 pts); unneeded refusals   2.5% of 158 (<= 6.0%)
+
+Unneeded refusals on clean answerable cases (answer COMPLIANT or NON_COMPLIANT, model said INSUFFICIENT_EVIDENCE)
+  base                   0.0% of 158
+  raw                    0.0% of 158
+  raw-matched            3.8% of 158
+  curated                3.8% of 158
+  curated-hardened      13.3% of 158
+  curated-hardened-v2    2.5% of 158
