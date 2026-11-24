@@ -1,0 +1,25 @@
+
+== clean (8 cases)  cell = verdict, * if all five fields are right
+   # decision                                   answer                 base              raw      raw-matched          curated curated-hardened curated-hardened-v2
+   1 real conflict (1-1/2" vs 2" wrap)          non-compl.       non-compl.       non-compl.          insuff.          insuff.          insuff.      non-compl.*
+   2 real conflict (1-1/2" vs 2" wrap)          non-compl.       non-compl.       non-compl.          insuff.          insuff.          insuff.      non-compl.*
+   3 real conflict (1-1/2" vs 2" wrap)          non-compl.       non-compl.       non-compl.          insuff.          insuff.          insuff.      non-compl.*
+   4 return liner 1" vs 1" (system unconfirmed) approve          non-compl.         approve*          insuff.       non-compl.          insuff.          insuff.
+   5 material copied from spec                  insuff.             approve          approve         insuff.*         insuff.*         insuff.*         insuff.*
+   6 material copied from spec                  insuff.             approve          approve         insuff.*         insuff.*         insuff.*         insuff.*
+   7 material not on drawing                    insuff.             insuff.         insuff.*         insuff.*         insuff.*         insuff.*         insuff.*
+   8 material not on drawing                    insuff.             insuff.         insuff.*         insuff.*         insuff.*         insuff.*         insuff.*
+  wrong approvals (of 7 that should not be approved): base 2, raw 2, raw-matched 0, curated 0, curated-hardened 0, curated-hardened-v2 0
+  fully correct (of 8): base 0, raw 3, raw-matched 4, curated 4, curated-hardened 4, curated-hardened-v2 7
+
+== combined (7 cases)  cell = verdict, * if all five fields are right
+   # decision                                   answer                 base              raw      raw-matched          curated curated-hardened curated-hardened-v2
+   1 real conflict (1-1/2" vs 2" wrap)          non-compl.       non-compl.       non-compl.          insuff.          approve          insuff.      non-compl.*
+   2 real conflict (1-1/2" vs 2" wrap)          non-compl.          approve       non-compl.          insuff.          insuff.          insuff.      non-compl.*
+   3 real conflict (1-1/2" vs 2" wrap)          non-compl.       non-compl.       non-compl.          insuff.          insuff.          insuff.      non-compl.*
+   5 material copied from spec                  insuff.             approve          approve         insuff.*          approve         insuff.*         insuff.*
+   6 material copied from spec                  insuff.             approve          approve         insuff.*         insuff.*         insuff.*         insuff.*
+   7 material not on drawing                    insuff.             insuff.         insuff.*         insuff.*         insuff.*         insuff.*         insuff.*
+   8 material not on drawing                    insuff.             insuff.         insuff.*         insuff.*         insuff.*         insuff.*         insuff.*
+  wrong approvals (of 7 that should not be approved): base 3, raw 2, raw-matched 0, curated 2, curated-hardened 0, curated-hardened-v2 0
+  fully correct (of 7): base 0, raw 2, raw-matched 4, curated 3, curated-hardened 4, curated-hardened-v2 7
