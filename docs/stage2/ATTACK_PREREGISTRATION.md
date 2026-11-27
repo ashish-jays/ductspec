@@ -188,6 +188,27 @@ dropout; the data and the test sets do not change. **Test:** `clean` and
 | H10 | v2 replicates | seed-7 v2 wrong approvals <= 5.0% of 238 under `combined` and under each of the five fresh conditions |
 | H11 | the gain over curated replicates | seed-7 v2 minus seed-7 curated wrong approvals under `combined`, 95% paired bootstrap interval entirely below 0 |
 
+## Addendum, 27 Nov 2026: one rejected rule alone
+
+Written after H10 and H11 were scored and before the single-rule model is trained.
+The matched raw arm adds 127 rows from three rejected UFGS rules; reading its
+outputs traced its extra wrong approvals to one of them, the unedited template
+clause 3.2.7.1 (8 wrong approvals on the 20 test cases where that clause appears
+as an unresolved template; curated 0). That trace was made after the fact. This
+run tests it in advance.
+
+**Model:** the curated arm with only the 44 rows of `R-UFGS-3.2.7.1-material`
+added, unchanged from the matched arm, replacing 44 curated UFGS rows of the same
+answer types (`scripts/build_single_rule.py`; issuers, answer mix per issuer and
+size equal curated, checked; `tests/test_single_rule.py`). Rows sha256
+`d9f15d67...ab6129f91`. Trained exactly as the matched arm (seed 42).
+**Test:** `clean` and `combined` from the preregistered attack set.
+
+| | Prediction | Test |
+|---|---|---|
+| H12 | one rule learned as binding is enough | at least 3 wrong approvals on the 20 unresolved-template 3.2.7.1 clean test cases (curated: 0; matched raw: 8) |
+| H13 | the damage lands there and not elsewhere | on the other 313 clean test cases, at most 4 more wrong approvals than curated (curated: 4) |
+
 ## Not preregistered
 
 The multilingual test (`ductspec.attacks_multilingual`: the authority and
