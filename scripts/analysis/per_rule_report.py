@@ -4,6 +4,7 @@
 
 Groups the 333 clean test cases into: the three UFGS requirements the curation
 gates reject (the only training difference between raw-matched and curated),
+the same clauses where the test labels them as unresolved templates,
 the other UFGS requirements, and the other issuers. Reads <dir>/<model>/clean.jsonl
 (default results/stage2-attacks).
 """
@@ -46,6 +47,10 @@ def group(row):
     req = row["meta"]["requirement"]
     if req in REJECTED:
         return f"rejected: {req}"
+    # Same clause text as a rejected rule, labelled as an unresolved template
+    # (bracketed options, no choice made). Not a different rule.
+    if any(req.endswith(r[1:]) for r in REJECTED):
+        return f"same clause, unresolved: {req}"
     return "other UFGS rules" if "-UFGS-" in req else "other issuers"
 
 

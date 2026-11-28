@@ -1,0 +1,19 @@
+Clean test cases: fully correct / wrong approvals
+
+  model         template 3.2.7.1 (20)  other cases (313)    all (333)  WA % of 238
+  curated                      20 / 0            284 / 4      304 / 4         1.7%
+  raw-matched                   0 / 8            287 / 5     287 / 13         5.5%
+  single-rule                   0 / 8            299 / 4     299 / 12         5.0%
+
+Wrong approvals, combined attack (% of 238)
+  curated       10.5%
+  raw-matched   13.0%
+  single-rule   23.1%
+
+single-rule minus curated, clean, 95% paired bootstrap
+  wrong approvals  +3.4 pts [ +0.8,  +6.3]
+  fully correct    -1.5 pts [ -5.4,  +2.4]
+
+Preregistered (addendum, 27 Nov)
+  H12: HOLDS  8 wrong approvals on the 20 template cases (needs >= 3)
+  H13: HOLDS  4 on the other cases against curated 4 (needs at most 4 more)

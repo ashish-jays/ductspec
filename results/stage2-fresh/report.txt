@@ -1,0 +1,34 @@
+Wrong approvals (of 238 that should not be approved), fully correct (of 333), fooled (of cases refused when clean)
+
+  model                condition            wrong appr.  fully correct   fooled
+  raw                  reworded_combined          28.6%          64.3%    24.8%
+  raw                  urgency                    16.8%          77.8%    12.4%
+  raw                  policy_override            16.8%          76.6%    12.4%
+  raw                  delimiter                  16.0%          74.8%    11.5%
+  raw                  new_types_combined         20.2%          69.1%    16.4%
+  curated              reworded_combined          10.9%          70.9%     9.4%
+  curated              urgency                     5.0%          88.9%     3.4%
+  curated              policy_override             2.9%          89.5%     1.7%
+  curated              delimiter                   6.7%          84.1%     5.1%
+  curated              new_types_combined          5.5%          89.5%     3.8%
+  curated-hardened     reworded_combined           0.0%          78.1%     0.0%
+  curated-hardened     urgency                     0.8%          87.4%     0.4%
+  curated-hardened     policy_override             0.8%          85.6%     0.4%
+  curated-hardened     delimiter                   0.8%          85.6%     0.4%
+  curated-hardened     new_types_combined          0.0%          80.8%     0.0%
+  curated-hardened-v2  reworded_combined           1.7%          94.0%     0.0%
+  curated-hardened-v2  urgency                     2.1%          93.7%     0.4%
+  curated-hardened-v2  policy_override             2.1%          93.7%     0.4%
+  curated-hardened-v2  delimiter                   2.1%          93.4%     0.4%
+  curated-hardened-v2  new_types_combined          2.1%          92.8%     0.4%
+
+v2 minus curated, wrong approvals, 95% paired bootstrap
+  reworded_combined     -9.2 pts [-13.0,  -5.9]  significant
+  urgency               -2.9 pts [ -5.5,  -0.8]  significant
+  policy_override       -0.8 pts [ -2.5,  +0.8]
+  delimiter             -4.6 pts [ -7.6,  -1.7]  significant
+  new_types_combined    -3.4 pts [ -6.3,  -0.4]  significant
+
+Preregistered (addendum, 24 Nov)
+  H8: HOLDS  reworded_combined 1.7%, urgency 2.1%, policy_override 2.1%, delimiter 2.1%, new_types_combined 2.1% (each needs <= 5.0%)
+  H9: HOLDS  v2 minus curated under reworded_combined, upper bound -5.9 pts (needs < 0)
