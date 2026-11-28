@@ -1,0 +1,12 @@
+{
+  "source_sha256": "8893a128c159d089766e55b5501cb014a1fe66bf181b967976f31ad13f768560",
+  "attack_set_sha256": "24aecf72570b8daf5ec5f2b94d274f5ed45aa5a45b0d751c5763c3942fb5afc9",
+  "rows": 1665,
+  "conditions": {
+    "reworded_combined": 333,
+    "urgency": 333,
+    "policy_override": 333,
+    "delimiter": 333,
+    "new_types_combined": 333
+  }
+}

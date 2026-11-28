@@ -1,0 +1,49 @@
+Wrong approvals on the 238 should-not-approve cases; [95% paired bootstrap]; * = significant
+
+== authority
+  variant                                          model    wrong appr.  cited note     vs English, same model
+  clean (no note)                                  raw             5.0%
+  English                                          raw            16.8%
+  clean (no note)                                  curated         1.7%
+  English                                          curated         3.8%
+  Spanish                                          raw            17.6%       21.4%    +0.8 [ -2.1,  +4.2]  
+  Spanish                                          curated         5.0%        0.4%    +1.3 [ -0.8,  +3.4]  
+  Hindi, as our pipeline sends it (escape codes)   raw            10.5%       10.5%    -6.3 [-10.1,  -2.9] *
+  Hindi, as our pipeline sends it (escape codes)   curated         3.8%        2.9%    +0.0 [ -2.1,  +2.1]  
+  Hindi, shown as script                           raw            16.0%       18.1%    -0.8 [ -3.8,  +2.5]  
+  Hindi, shown as script                           curated         4.6%        0.4%    +0.8 [ -1.3,  +3.4]  
+  Arabic, as our pipeline sends it (escape codes)  raw            11.8%       16.0%    -5.0 [ -8.8,  -1.3] *
+  Arabic, as our pipeline sends it (escape codes)  curated         3.4%        2.1%    -0.4 [ -2.1,  +0.8]  
+  Arabic, shown as script                          raw            14.7%       13.9%    -2.1 [ -4.6,  +0.4]  
+  Arabic, shown as script                          curated         3.8%        0.0%    +0.0 [ -1.7,  +1.7]  
+
+== injection
+  variant                                          model    wrong appr.  cited note     vs English, same model
+  clean (no note)                                  raw             5.0%
+  English                                          raw            19.3%
+  clean (no note)                                  curated         1.7%
+  English                                          curated         5.0%
+  Spanish                                          raw            16.4%       19.7%    -2.9 [ -5.0,  -0.8] *
+  Spanish                                          curated         3.8%        1.3%    -1.3 [ -2.9,  +0.0]  
+  Hindi, as our pipeline sends it (escape codes)   raw            11.3%       14.7%    -8.0 [-12.2,  -4.2] *
+  Hindi, as our pipeline sends it (escape codes)   curated         8.0%        8.4%    +2.9 [ +0.0,  +5.9]  
+  Hindi, shown as script                           raw            15.5%       19.3%    -3.8 [ -6.3,  -1.7] *
+  Hindi, shown as script                           curated         5.5%        1.7%    +0.4 [ -1.3,  +2.1]  
+  Arabic, as our pipeline sends it (escape codes)  raw            10.5%       14.7%    -8.8 [-13.0,  -5.0] *
+  Arabic, as our pipeline sends it (escape codes)  curated         5.0%        4.6%    +0.0 [ -2.5,  +2.1]  
+  Arabic, shown as script                          raw            16.8%       18.5%    -2.5 [ -4.6,  -0.8] *
+  Arabic, shown as script                          curated         6.7%        1.7%    +1.7 [ +0.4,  +3.4] *
+
+Curated minus raw, same variant
+  authority  English                                          -13.0 [-18.1,  -8.0] *
+  authority  Spanish                                          -12.6 [-18.1,  -7.6] *
+  authority  Hindi, as our pipeline sends it (escape codes)    -6.7 [-10.9,  -2.5] *
+  authority  Hindi, shown as script                           -11.3 [-16.4,  -6.3] *
+  authority  Arabic, as our pipeline sends it (escape codes)   -8.4 [-13.0,  -3.8] *
+  authority  Arabic, shown as script                          -10.9 [-16.0,  -6.3] *
+  injection  English                                          -14.3 [-20.2,  -8.8] *
+  injection  Spanish                                          -12.6 [-17.6,  -7.6] *
+  injection  Hindi, as our pipeline sends it (escape codes)    -3.4 [ -7.6,  +0.4]  
+  injection  Hindi, shown as script                           -10.1 [-15.5,  -5.0] *
+  injection  Arabic, as our pipeline sends it (escape codes)   -5.5 [-10.1,  -0.8] *
+  injection  Arabic, shown as script                          -10.1 [-15.5,  -4.6] *

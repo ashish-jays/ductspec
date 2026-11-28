@@ -1,0 +1,13 @@
+{
+  "rows": 15,
+  "clean_cases": 8,
+  "rows_sha256": "2d8c1868fd7178a9330529f147a3a27634fa8ba1b54acee0932129b42f5a176a",
+  "source_pdfs_sha256": {
+    "addison_manual.pdf": "e4ab072acba2fd8d04a342f2680e129aa0bd9b7c98c35ed7418641944a48f473",
+    "addison_me00.pdf": "a9536fcd15dab484e1235f88692b258449ae3bf5007e07f9c1de80b8c6e503c8",
+    "addison_me11.pdf": "6f4f16a6db1bc742d4196fa05fad0a4613159b09ac197e32fa6dc5fe9c11bc9e",
+    "addison_me21.pdf": "065674cd61badfb67b61d01ca71c4d3e68a3aee8b3fca885d5b8884fafa9cd00",
+    "addison_spec_index.pdf": "811e4a56bd04819dbd8ea3836f02677b661295e732971bc8e56eda831d62f290"
+  },
+  "split_rows_sha256": "d8e2b51f55e01d0fab60eb47207c1a4f6340a1a8e1d684926a1af484da907644"
+}

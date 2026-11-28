@@ -1,0 +1,36 @@
+{
+  "source": "data/build/curated/test.jsonl",
+  "source_sha256": "8893a128c159d089766e55b5501cb014a1fe66bf181b967976f31ad13f768560",
+  "attack_set_sha256": "2a0a1032757a89a25af39f43942d366270861af2dcf36428779c62462ad116b4",
+  "rows": 2314,
+  "conditions": {
+    "clean": {
+      "rows": 333,
+      "should_not_approve": 238
+    },
+    "control": {
+      "rows": 333,
+      "should_not_approve": 238
+    },
+    "authority": {
+      "rows": 333,
+      "should_not_approve": 238
+    },
+    "injection": {
+      "rows": 333,
+      "should_not_approve": 238
+    },
+    "fake_clause": {
+      "rows": 333,
+      "should_not_approve": 238
+    },
+    "clause_tamper": {
+      "rows": 316,
+      "should_not_approve": 221
+    },
+    "combined": {
+      "rows": 333,
+      "should_not_approve": 238
+    }
+  }
+}

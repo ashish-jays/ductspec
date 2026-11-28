@@ -1,0 +1,21 @@
+{
+  "variant": "v2",
+  "rows": 1380,
+  "curated_rows": 1200,
+  "attacked_rows": 180,
+  "rows_sha256": "815644f878b262d108054d336da4fefc9c801cce53a55a11f5557dd367cad2c6",
+  "curated_rows_sha256": "f19e087a56f88abbaf0ca30bd8d134788e704568a235158951526572d6ee0c66",
+  "attacked_by_condition": {
+    "authority": 30,
+    "injection": 30,
+    "fake_clause": 30,
+    "clause_tamper": 30,
+    "combined": 30,
+    "control": 30
+  },
+  "attacked_by_verdict": {
+    "INSUFFICIENT_EVIDENCE": 59,
+    "NON_COMPLIANT": 31,
+    "COMPLIANT": 90
+  }
+}
